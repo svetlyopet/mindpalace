@@ -1,0 +1,14 @@
+{{define "partials/entries.html"}}
+{{range .Results}}
+<div class="entry-row{{if eq $.SelectedID .Meta.ID}} is-selected{{end}}">
+  <a href="/entry/{{.Meta.ID}}"
+     hx-get="/ui/entry/{{.Meta.ID}}"
+     hx-target="#viewer"
+     hx-push-url="/entry/{{.Meta.ID}}">{{.Meta.Title}}</a>
+  <span class="entry-meta">{{.Meta.Created.Format "2006-01-02"}} · {{.Meta.Type}}</span>
+  {{range .Meta.Tags}}<span class="tag"><a href="/?tag={{.}}">{{.}}</a></span>{{end}}
+</div>
+{{else}}
+<p class="msg entry-list-empty">No entries.</p>
+{{end}}
+{{end}}

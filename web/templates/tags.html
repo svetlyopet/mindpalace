@@ -1,0 +1,13 @@
+{{define "title"}}Tags — Mindpalace{{end}}
+{{define "viewer"}}
+<div class="tags-view">
+  <h1>Tags</h1>
+  <div class="tag-cloud">
+  {{range .TagCounts}}
+    <span class="tag tag-lg"><a href="/?tag={{.Tag}}">{{.Tag}}</a> <span class="tag-count">{{.Count}}</span></span>
+  {{else}}
+    <p class="msg">No tags yet.</p>
+  {{end}}
+  </div>
+</div>
+{{end}}

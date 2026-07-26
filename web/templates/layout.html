@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{block "title" .}}Mindpalace{{end}}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js"></script>
+  <script>htmx.config.withCredentials = true;</script>
+</head>
+<body>
+  <div class="app">
+    <header class="app-top">
+      <div class="top-left">
+        <button type="button" class="icon-btn sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <a class="brand" href="/">Mindpalace</a>
+      </div>
+      <form id="filters" class="search-bar">
+        <input type="search" id="global-search" name="q" placeholder="Search entries…" value="{{.Query}}" autocomplete="off">
+        <input type="hidden" name="tag" value="{{.Tag}}">
+        <input type="hidden" name="selected" value="{{.SelectedID}}">
+      </form>
+      <div class="top-right capture-actions">
+        <button type="button" class="btn-add-action" id="note-panel-toggle" aria-expanded="false" aria-controls="note-modal">Add note</button>
+        <button type="button" class="btn-add-action" id="url-panel-toggle" aria-expanded="false" aria-controls="url-modal">Add link</button>
+        <button type="button" class="btn-add-action" id="file-panel-toggle" aria-expanded="false" aria-controls="file-modal">Import file</button>
+      </div>
+    </header>
+    <div class="app-body">
+      <aside class="sidebar" id="sidebar">
+        {{template "partials/sidebar.html" .}}
+      </aside>
+      <main id="viewer" class="viewer">
+        {{block "viewer" .}}{{end}}
+      </main>
+    </div>
+  </div>
+  <div class="note-modal" id="note-modal" hidden>
+    <div class="note-modal-backdrop" id="note-modal-backdrop"></div>
+    <div class="note-panel" id="note-panel" role="dialog" aria-labelledby="note-modal-title">
+      <span class="resize-handle resize-e" aria-hidden="true"></span>
+      <span class="resize-handle resize-s" aria-hidden="true"></span>
+      <span class="resize-handle resize-se" aria-hidden="true"></span>
+      <div class="note-panel-inner">
+        <h2 id="note-modal-title">New note</h2>
+        <label class="note-tags-label">Title
+          <input type="text" class="capture-field" id="note-title" autocomplete="off" required>
+        </label>
+        <label class="note-tags-label">Tags
+          <input type="text" class="note-tags" id="note-tags" placeholder="golang, ideas" autocomplete="off">
+        </label>
+        <div class="tag-suggestions" id="note-tag-suggestions" hidden></div>
+        <div class="md-toolbar">
+          <button type="button" data-md="h" title="Heading">H</button>
+          <button type="button" data-md="b" title="Bold"><strong>B</strong></button>
+          <button type="button" data-md="i" title="Italic"><em>I</em></button>
+          <button type="button" data-md="link" title="Link">Link</button>
+          <button type="button" data-md="list" title="List">List</button>
+        </div>
+        <div class="note-composer">
+          <textarea id="note-md" class="note-editor" rows="14" placeholder="Write markdown…"></textarea>
+          <div id="note-preview" class="note-preview prose"></div>
+        </div>
+        <div class="note-panel-actions">
+          <button type="button" class="btn-primary" id="note-save">Save note</button>
+          <p class="msg" id="note-status"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note-modal" id="url-modal" hidden>
+    <div class="note-modal-backdrop" id="url-modal-backdrop"></div>
+    <div class="capture-panel" role="dialog" aria-labelledby="url-modal-title">
+      <div class="note-panel-inner">
+        <h2 id="url-modal-title">Add link</h2>
+        <label class="note-tags-label">Title
+          <input type="text" class="capture-field" id="url-title" autocomplete="off" required>
+        </label>
+        <label class="note-tags-label">Tags
+          <input type="text" class="note-tags" id="url-tags" placeholder="golang, ideas" autocomplete="off">
+        </label>
+        <div class="tag-suggestions" id="url-tag-suggestions" hidden></div>
+        <label class="note-tags-label">URL
+          <input type="url" class="capture-field" id="url-input" placeholder="https://…" autocomplete="off">
+        </label>
+        <label class="capture-checkbox">
+          <input type="checkbox" id="url-full"> Save full HTML bundle
+        </label>
+        <div class="note-panel-actions">
+          <button type="button" class="btn-primary" id="url-save">Save link</button>
+          <p class="msg" id="url-status"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note-modal" id="file-modal" hidden>
+    <div class="note-modal-backdrop" id="file-modal-backdrop"></div>
+    <div class="capture-panel" role="dialog" aria-labelledby="file-modal-title">
+      <div class="note-panel-inner">
+        <h2 id="file-modal-title">Import file</h2>
+        <label class="note-tags-label">Title
+          <input type="text" class="capture-field" id="file-title" autocomplete="off" required>
+        </label>
+        <label class="note-tags-label">Tags
+          <input type="text" class="note-tags" id="file-tags" placeholder="golang, ideas" autocomplete="off">
+        </label>
+        <div class="tag-suggestions" id="file-tag-suggestions" hidden></div>
+        <label class="note-tags-label">File
+          <input type="file" class="capture-field" id="file-input">
+        </label>
+        <p class="field-hint" id="file-name-hint"></p>
+        <div class="note-panel-actions">
+          <button type="button" class="btn-primary" id="file-save">Import</button>
+          <p class="msg" id="file-status"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="confirm-modal" id="delete-modal" hidden>
+    <div class="confirm-modal-backdrop" id="delete-modal-backdrop"></div>
+    <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+      <h2 id="delete-modal-title">Delete entry?</h2>
+      <p class="confirm-dialog-body">This permanently removes <strong id="delete-confirm-title"></strong> and cannot be undone.</p>
+      <p class="msg" id="delete-confirm-status"></p>
+      <div class="confirm-dialog-actions">
+        <button type="button" class="btn-secondary" id="delete-cancel">Cancel</button>
+        <button type="button" class="btn-danger" id="delete-confirm">Delete</button>
+      </div>
+    </div>
+  </div>
+  <script src="/static/capture-tags.js"></script>
+  <script src="/static/entries-list.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

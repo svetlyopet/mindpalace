@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Save to Mindpalace</title>
+  <style>
+    body {
+      font: 14px/1.4 system-ui, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      min-width: 320px;
+      max-width: 420px;
+    }
+    h1 { font-size: 1rem; margin: 0 0 0.75rem; }
+    .title { color: #555; margin-bottom: 0.75rem; word-break: break-word; }
+    label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #666; margin-bottom: 0.25rem; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.4rem 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font: inherit;
+    }
+    .suggestions { margin: 0.5rem 0 1rem; display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+    .suggestions span { font-size: 0.75rem; color: #666; }
+    .chip {
+      font: inherit;
+      font-size: 0.78rem;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid #ccc;
+      border-radius: 999px;
+      background: #f5f5f5;
+      cursor: pointer;
+    }
+    .actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem; }
+    button {
+      font: inherit;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    .msg { color: #b00020; min-height: 1.2em; margin-top: 0.5rem; font-size: 0.85rem; }
+    .after-save { margin-top: 0.5rem; font-size: 0.9rem; }
+    .after-save a { color: #1a1a1a; }
+  </style>
+</head>
+<body>
+  <h1>Save page</h1>
+  <label for="capture-title">Title</label>
+  <input type="text" id="capture-title" autocomplete="off">
+  <label for="tags">Tags</label>
+  <input type="text" id="tags" placeholder="golang, ideas" autocomplete="off">
+  <div class="suggestions" id="suggestions" hidden></div>
+  <p class="msg" id="status"></p>
+  <p class="after-save" id="after-save" hidden>
+    <a id="open-library" href="#" target="_blank" rel="noopener">Open Mindpalace</a>
+  </p>
+  <div class="actions">
+    <button type="button" id="cancel">Cancel</button>
+    <button type="button" class="primary" id="save">Save</button>
+  </div>
+  <script src="capture.js"></script>
+</body>
+</html>

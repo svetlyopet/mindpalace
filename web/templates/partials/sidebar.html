@@ -1,0 +1,31 @@
+{{define "partials/sidebar.html"}}
+<nav class="sidebar-nav">
+  <a href="/" class="nav-link{{if eq .ActiveNav "library"}} is-active{{end}}">Library</a>
+  <a href="/tags" class="nav-link{{if eq .ActiveNav "tags"}} is-active{{end}}">Tags</a>
+</nav>
+
+{{if .Tag}}
+<p class="sidebar-active-tag">
+  Tag: <span class="tag">{{.Tag}}</span>
+  <a href="/" class="clear-tag" title="Clear tag filter">×</a>
+</p>
+{{end}}
+
+<div class="sidebar-filters">
+  <label class="filter-label">Type
+    <select name="type" form="filters">
+      <option value="">All types</option>
+      {{range .Types}}
+      <option value="{{.}}" {{if eq $.TypeFilter .}}selected{{end}}>{{.}}</option>
+      {{end}}
+    </select>
+  </label>
+  <label class="filter-label">Since
+    <input type="text" name="since" form="filters" placeholder="2w" value="{{.Since}}">
+  </label>
+</div>
+
+<div id="entry-list" class="entry-list">
+  {{template "partials/entries.html" .}}
+</div>
+{{end}}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unlock — Mindpalace</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="unlock-page">
+  <div class="unlock-card">
+    <h1>Unlock vault</h1>
+    <p class="msg">Enter your vault password to continue.</p>
+    <form id="unlock-form">
+      <label>Password
+        <input type="password" id="unlock-password" autocomplete="current-password" required>
+      </label>
+      <p><button type="submit">Unlock</button></p>
+      <p class="msg unlock-error" id="unlock-error" hidden></p>
+    </form>
+  </div>
+  <script>
+  document.getElementById('unlock-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const pw = document.getElementById('unlock-password').value;
+    fetch('/api/unlock', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    }).then(function (r) {
+      if (r.ok) {
+        window.location.href = '/';
+        return;
+      }
+      const err = document.getElementById('unlock-error');
+      err.hidden = false;
+      err.textContent = r.status === 401 ? 'Wrong password.' : 'Could not unlock.';
+    });
+  });
+  </script>
+</body>
+</html>

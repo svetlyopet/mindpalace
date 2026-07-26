@@ -1,0 +1,6 @@
+{{define "partials/viewer-empty.html"}}
+<div class="viewer-empty">
+  <h2>Select an entry</h2>
+  <p class="msg">Choose something from the sidebar, or search with <kbd>/</kbd>.{{if or .Query .Tag}} Filters are active.{{end}}</p>
+</div>
+{{end}}
