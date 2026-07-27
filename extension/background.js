@@ -132,7 +132,7 @@ chrome.action.onClicked.addListener(async (tab) => {
       url: chrome.runtime.getURL("capture.html"),
       type: "popup",
       width: 420,
-      height: 320,
+      height: 360,
     });
   } catch (err) {
     notify("Capture failed", truncate(err && err.message, 200));

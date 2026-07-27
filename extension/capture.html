@@ -14,7 +14,7 @@
     h1 { font-size: 1rem; margin: 0 0 0.75rem; }
     .title { color: #555; margin-bottom: 0.75rem; word-break: break-word; }
     label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #666; margin-bottom: 0.25rem; }
-    input {
+    input[type="text"] {
       width: 100%;
       box-sizing: border-box;
       padding: 0.4rem 0.5rem;
@@ -22,6 +22,17 @@
       border-radius: 6px;
       font: inherit;
     }
+    label.capture-option {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin: 0.75rem 0 0;
+      font-size: inherit;
+      text-transform: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    label.capture-option input { width: auto; }
     .suggestions { margin: 0.5rem 0 1rem; display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
     .suggestions span { font-size: 0.75rem; color: #666; }
     .chip {
@@ -54,6 +65,10 @@
   <label for="tags">Tags</label>
   <input type="text" id="tags" placeholder="golang, ideas" autocomplete="off">
   <div class="suggestions" id="suggestions" hidden></div>
+  <label class="capture-option">
+    <input type="checkbox" id="capture-full">
+    Save full HTML bundle
+  </label>
   <p class="msg" id="status"></p>
   <p class="after-save" id="after-save" hidden>
     <a id="open-library" href="#" target="_blank" rel="noopener">Open Mindpalace</a>

@@ -21,14 +21,16 @@ Save the current browser tab to your local Mindpalace vault via `mp serve`.
 2. **Server base URL** — usually `http://127.0.0.1:7451` (must match `serve.addr` in vault `config.yaml`).
 3. **API token** — copy `serve.token` from the same `config.yaml`. When you run `mp serve`, the config path is printed on stderr.
 4. Click **Test connection** — should report “Connection OK”.
-5. Click **Save**.
+5. Optionally enable **Default: save full HTML bundle** if you usually want the sanitized page HTML and fetched CSS stored with each capture.
+6. Click **Save**.
 
 ## Use
 
 1. Open a normal **http** or **https** page (not `chrome://`, the Web Store, or other restricted URLs).
 2. Click the Mindpalace toolbar icon.
-3. Add tags if you want, then **Save**.
-4. Optionally click **Open Mindpalace** in the popup to view the library.
+3. Edit the title or tags if you want. Use **Save full HTML bundle** to include the full page archive for this save (initial state follows the Options default).
+4. Click **Save**. Full-bundle saves can take longer while the server fetches linked stylesheets.
+5. Optionally click **Open Mindpalace** in the popup to view the library.
 
 ## Troubleshooting
 

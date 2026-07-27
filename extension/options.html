@@ -57,6 +57,17 @@
     .msg { min-height: 1.25em; margin-top: 0.75rem; font-size: 0.9rem; }
     .msg.ok { color: #0d6b0d; }
     .msg.err { color: #b00020; }
+    label.capture-option {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin: 1rem 0 0;
+      font-size: inherit;
+      text-transform: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    label.capture-option input { width: auto; }
   </style>
 </head>
 <body>
@@ -74,6 +85,10 @@
     <input type="password" id="token" autocomplete="off">
     <button type="button" id="toggle-token" aria-label="Show token">Show</button>
   </div>
+  <label class="capture-option">
+    <input type="checkbox" id="defaultFullHtml">
+    Default: save full HTML bundle
+  </label>
   <div class="actions">
     <button type="button" class="primary" id="save">Save</button>
     <button type="button" class="secondary" id="test">Test connection</button>

@@ -1,5 +1,6 @@
 const baseUrlEl = document.getElementById("baseUrl");
 const tokenEl = document.getElementById("token");
+const defaultFullHtmlEl = document.getElementById("defaultFullHtml");
 const statusEl = document.getElementById("status");
 const toggleTokenBtn = document.getElementById("toggle-token");
 
@@ -16,12 +17,14 @@ function readConfig() {
   return {
     baseUrl: normalizeBaseUrl(baseUrlEl.value),
     token: tokenEl.value.trim(),
+    defaultFullHtml: defaultFullHtmlEl.checked,
   };
 }
 
-chrome.storage.sync.get(["baseUrl", "token"], (v) => {
+chrome.storage.sync.get(["baseUrl", "token", "defaultFullHtml"], (v) => {
   baseUrlEl.value = v.baseUrl || "http://127.0.0.1:7451";
   tokenEl.value = v.token || "";
+  defaultFullHtmlEl.checked = !!v.defaultFullHtml;
 });
 
 toggleTokenBtn.addEventListener("click", () => {
@@ -32,7 +35,7 @@ toggleTokenBtn.addEventListener("click", () => {
 });
 
 document.getElementById("save").addEventListener("click", () => {
-  const { baseUrl, token } = readConfig();
+  const { baseUrl, token, defaultFullHtml } = readConfig();
   if (!baseUrl) {
     setStatus("Enter a server URL.", "err");
     return;
@@ -41,7 +44,7 @@ document.getElementById("save").addEventListener("click", () => {
     setStatus("Enter the API token from config.yaml.", "err");
     return;
   }
-  chrome.storage.sync.set({ baseUrl, token }, () => {
+  chrome.storage.sync.set({ baseUrl, token, defaultFullHtml }, () => {
     setStatus("Saved.", "ok");
   });
 });

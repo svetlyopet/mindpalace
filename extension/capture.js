@@ -16,12 +16,18 @@ function appendTag(input, tag) {
   input.value = parts.concat(tag).join(", ");
 }
 
+async function loadDefaultFullHtml() {
+  const { defaultFullHtml } = await chrome.storage.sync.get("defaultFullHtml");
+  return !!defaultFullHtml;
+}
+
 async function loadDraft() {
   const { captureDraft } = await chrome.storage.session.get("captureDraft");
   if (!captureDraft) {
     document.getElementById("status").textContent = "Nothing to save.";
     return null;
   }
+  document.getElementById("capture-full").checked = await loadDefaultFullHtml();
   const titleEl = document.getElementById("capture-title");
   titleEl.value = captureDraft.title || captureDraft.url || "";
   const suggestionsEl = document.getElementById("suggestions");
@@ -53,7 +59,8 @@ async function saveDraft(draft) {
     return;
   }
   const tags = parseTags(document.getElementById("tags").value);
-  status.textContent = "Saving…";
+  const full = document.getElementById("capture-full").checked;
+  status.textContent = full ? "Saving (full bundle may take a moment)…" : "Saving…";
   const base = draft.baseUrl.replace(/\/$/, "");
   let res;
   try {
@@ -69,6 +76,7 @@ async function saveDraft(draft) {
         html: draft.html,
         title,
         tags,
+        full,
       }),
     });
   } catch (err) {
@@ -80,6 +88,7 @@ async function saveDraft(draft) {
     return;
   }
   await chrome.storage.session.remove("captureDraft");
+  document.getElementById("capture-full").checked = await loadDefaultFullHtml();
   const afterSave = document.getElementById("after-save");
   const openLink = document.getElementById("open-library");
   if (openLink && afterSave) {
