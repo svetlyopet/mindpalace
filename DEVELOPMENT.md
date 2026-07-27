@@ -40,6 +40,17 @@ Triggers: pushes to `main` / `master` and all pull requests.
 
 If you rename or split this workflow, re-select required status checks under branch protection (GitHub keys checks off workflow/job names).
 
+## Security scanning (post-CI)
+
+These workflows run only after [`ci`](.github/workflows/ci.yml) completes successfully (`workflow_run`). They do not run on tag/release workflows.
+
+| Workflow | Tools | Results |
+| --- | --- | --- |
+| [`.github/workflows/sast.yml`](.github/workflows/sast.yml) | [gosec](https://github.com/securego/gosec) (Go SAST), [Semgrep](https://semgrep.dev/) (`p/golang`, `p/security-audit`) | SARIF uploaded to **Security → Code scanning**; failures fail the workflow |
+| [`.github/workflows/dast.yml`](.github/workflows/dast.yml) | [OWASP ZAP](https://www.zaproxy.org/) baseline against `mp serve` on loopback | Actions job log and ZAP report artifacts from the action |
+
+Both check out the same commit CI tested (`workflow_run.head_sha`). `sast` and `dast` must exist on the default branch before they trigger on pull requests.
+
 ## Release automation (overview)
 
 Tag pushes matching semver (`v*.*.*`) trigger [`.github/workflows/release.yml`](.github/workflows/release.yml). Configuration lives in [`.goreleaser.yaml`](.goreleaser.yaml).
