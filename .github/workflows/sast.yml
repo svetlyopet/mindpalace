@@ -23,10 +23,15 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           repository: ${{ github.event.workflow_run.head_repository.full_name || github.repository }}
 
-      - name: Run gosec
-        uses: securego/gosec@master
+      - uses: actions/setup-go@v5
         with:
-          args: -fmt sarif -out gosec.sarif ./...
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run gosec
+        run: |
+          go run github.com/securego/gosec/v2/cmd/gosec \
+            -fmt sarif -out gosec.sarif ./...
 
       - name: Upload gosec SARIF
         if: always() && hashFiles('gosec.sarif') != ''
@@ -66,3 +71,22 @@ jobs:
         with:
           sarif_file: semgrep.sarif
           category: semgrep
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          repository: ${{ github.event.workflow_run.head_repository.full_name || github.repository }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck ./...

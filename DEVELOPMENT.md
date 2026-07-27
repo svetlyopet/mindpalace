@@ -20,6 +20,17 @@ make test-e2e       # CLI subprocess E2E (builds mp first)
 
 These mirror what CI runs (see below). Run `make help` for all targets.
 
+## Tooling (pinned Go CLIs)
+
+[`tools/tools.go`](tools/tools.go) (`//go:build tools`) and the `tool` block in [`go.mod`](go.mod) pin **gosec** and **govulncheck** versions. They are not linked into `mp`; use `go run …/cmd/gosec` or the Make targets below.
+
+```bash
+make gosec          # Go SAST (same family as CI gosec job)
+make govulncheck    # dependency vulnerability scan for code paths you use
+```
+
+Semgrep and OWASP ZAP remain CI-only (Python/Docker actions); see **Security scanning**.
+
 ## Local release snapshot
 
 `make release` runs GoReleaser in snapshot mode (`goreleaser release --snapshot --clean`). Artifacts land in `dist/` only; nothing is published to GitHub. Use it to check cross-compiled binaries, SPDX SBOMs (when Syft is installed), and `mp --version` on built binaries.
@@ -46,7 +57,7 @@ These workflows run only after [`ci`](.github/workflows/ci.yml) completes succes
 
 | Workflow | Tools | Results |
 | --- | --- | --- |
-| [`.github/workflows/sast.yml`](.github/workflows/sast.yml) | [gosec](https://github.com/securego/gosec) (Go SAST), [Semgrep](https://semgrep.dev/) (`p/golang`, `p/security-audit`) | SARIF uploaded to **Security → Code scanning**; failures fail the workflow |
+| [`.github/workflows/sast.yml`](.github/workflows/sast.yml) | [gosec](https://github.com/securego/gosec), [Semgrep](https://semgrep.dev/) (`p/golang`, `p/security-audit`), [govulncheck](https://go.dev/security/vuln/) | gosec/Semgrep SARIF → **Security → Code scanning**; failures fail the workflow |
 | [`.github/workflows/dast.yml`](.github/workflows/dast.yml) | [OWASP ZAP](https://www.zaproxy.org/) baseline against `mp serve` on loopback | Actions job log and ZAP report artifacts from the action |
 
 Both check out the same commit CI tested (`workflow_run.head_sha`). `sast` and `dast` must exist on the default branch before they trigger on pull requests.
