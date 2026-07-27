@@ -65,3 +65,47 @@ func TestSearchMultiWord(t *testing.T) {
 		t.Logf("q=%q hits=%d", qtext, len(res))
 	}
 }
+
+func TestSearchFindsTagsMultiTagEntry(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := vault.Init(dir); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("editor: \"\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, _ := vault.Open(dir)
+	e := &vault.Entry{
+		ID: "s3", Title: "Indexed note", Created: time.Now(), Type: vault.TypeNote,
+		Tags: []string{"alpha", "beta"},
+		Body: "uniquebodytoken",
+	}
+	if err := v.Create(e); err != nil {
+		t.Fatal(err)
+	}
+	ix, err := index.Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ix.Close()
+	if err := ix.Put(e); err != nil {
+		t.Fatal(err)
+	}
+	sr := search.New(ix)
+	for _, qtext := range []string{"alpha", "beta", "uniquebodytoken"} {
+		res, err := sr.Search(context.Background(), search.Query{Text: qtext, Limit: 10})
+		if err != nil {
+			t.Fatalf("q=%q err=%v", qtext, err)
+		}
+		if len(res) == 0 || res[0].Meta.ID != "s3" {
+			t.Fatalf("q=%q: expected hit for s3, got %+v", qtext, res)
+		}
+	}
+	res, err := sr.Search(context.Background(), search.Query{Text: "uniquebodytoken", Tags: []string{"alpha"}, Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 1 || res[0].Meta.ID != "s3" {
+		t.Fatalf("text+tag: got %+v", res)
+	}
+}

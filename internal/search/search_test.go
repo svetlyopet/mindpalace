@@ -137,3 +137,40 @@ func TestSearcherFullText(t *testing.T) {
 		t.Fatalf("res = %+v", res)
 	}
 }
+
+func TestSearcherFullTextMultiTag(t *testing.T) {
+	vi := testenv.TempVaultIndex(t, false)
+	e := &vault.Entry{
+		ID: "mt01", Title: "Plain title", Created: time.Now().UTC(),
+		Type: vault.TypeNote, Tags: []string{"alpha", "beta"},
+		Body: "payloadmarker only in body",
+	}
+	testenv.WriteEntry(t, vi.Vault, vi.Index, e)
+	sr := New(vi.Index)
+
+	for _, qtext := range []string{"alpha", "beta"} {
+		res, err := sr.Search(context.Background(), Query{Text: qtext, Limit: 5})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(res) != 1 || res[0].Meta.ID != "mt01" {
+			t.Fatalf("q=%q res = %+v", qtext, res)
+		}
+	}
+
+	res, err := sr.Search(context.Background(), Query{Text: "payloadmarker", Tags: []string{"alpha"}, Limit: 5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 1 || res[0].Meta.ID != "mt01" {
+		t.Fatalf("text+tag res = %+v", res)
+	}
+
+	res, err = sr.Search(context.Background(), Query{Text: "payloadmarker", Tags: []string{"missing"}, Limit: 5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 0 {
+		t.Fatalf("expected no hits with wrong tag, got %+v", res)
+	}
+}

@@ -44,3 +44,22 @@ func TestAPIEntriesSearchWithEmptyTagParam(t *testing.T) {
 		t.Fatalf("hits = %+v", hits)
 	}
 }
+
+func TestAPIEntriesSearchByTagWordMultiTag(t *testing.T) {
+	s, token := testServer(t)
+	// Default fixture has tags alpha,beta and body "hello world" (no alpha/beta in payload).
+	req := httptest.NewRequest("GET", "/api/entries?q=alpha", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	s.apiListEntries(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%q", w.Code, w.Body.String())
+	}
+	var hits []dto.SearchHit
+	if err := json.Unmarshal(w.Body.Bytes(), &hits); err != nil {
+		t.Fatal(err)
+	}
+	if len(hits) == 0 || hits[0].ID != "abc123" {
+		t.Fatalf("hits = %+v", hits)
+	}
+}

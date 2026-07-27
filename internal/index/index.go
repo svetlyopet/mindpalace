@@ -18,7 +18,7 @@ import (
 	"github.com/blevesearch/bleve/v2/search/query"
 )
 
-const mappingVersion = "1"
+const mappingVersion = "2"
 
 type EntryMeta struct {
 	ID      string      `json:"id"`
@@ -149,7 +149,7 @@ func (ix *Index) Put(e *vault.Entry) error {
 		"title":     e.Title,
 		"body":      e.Body,
 		"extracted": string(extracted),
-		"tags":      strings.Join(e.Tags, " "),
+		"tags":      append([]string(nil), e.Tags...),
 		"type":      string(e.Type),
 		"created":   e.Created,
 		"domain":    domainFromSource(e.Source),

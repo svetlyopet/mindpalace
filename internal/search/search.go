@@ -94,10 +94,22 @@ func (s *Searcher) searchMetaOnly(q Query) []Result {
 
 func (s *Searcher) searchFullText(ctx context.Context, q Query) ([]Result, error) {
 	_ = ctx
-	match := bleve.NewMatchQuery(q.Text)
-	match.Fuzziness = 0
-
 	filter := buildFilterQuery(q)
+	res, err := s.runFullTextSearch(q, filter, 0)
+	if err != nil {
+		return nil, err
+	}
+	if res.Total == 0 {
+		res, err = s.runFullTextSearch(q, filter, 1)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return hitsToResults(s.ix, res), nil
+}
+
+func (s *Searcher) runFullTextSearch(q Query, filter query.Query, fuzziness int) (*bleve.SearchResult, error) {
+	match := buildTextQuery(q.Text, fuzziness)
 	var bq bleve.SearchRequest
 	if filter != nil {
 		bq = *bleve.NewSearchRequest(bleve.NewConjunctionQuery(match, filter))
@@ -106,28 +118,23 @@ func (s *Searcher) searchFullText(ctx context.Context, q Query) ([]Result, error
 	}
 	bq.Size = q.Limit
 	bq.Highlight = bleve.NewHighlightWithStyle("html")
-	bq.Fields = []string{"title", "body", "extracted"}
+	bq.Fields = []string{"title", "body", "extracted", "tags"}
+	return s.ix.Bleve().Search(&bq)
+}
 
-	res, err := s.ix.Bleve().Search(&bq)
-	if err != nil {
-		return nil, err
+var fullTextSearchFields = []string{"title", "body", "extracted", "tags"}
+
+func buildTextQuery(text string, fuzziness int) query.Query {
+	parts := make([]query.Query, 0, len(fullTextSearchFields))
+	for _, field := range fullTextSearchFields {
+		mq := bleve.NewMatchQuery(text)
+		mq.SetField(field)
+		mq.Fuzziness = fuzziness
+		parts = append(parts, mq)
 	}
-	if res.Total == 0 {
-		match.Fuzziness = 1
-		if filter != nil {
-			bq = *bleve.NewSearchRequest(bleve.NewConjunctionQuery(match, filter))
-		} else {
-			bq = *bleve.NewSearchRequest(match)
-		}
-		bq.Size = q.Limit
-		bq.Highlight = bleve.NewHighlightWithStyle("html")
-		bq.Fields = []string{"title", "body", "extracted"}
-		res, err = s.ix.Bleve().Search(&bq)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return hitsToResults(s.ix, res), nil
+	dq := bleve.NewDisjunctionQuery(parts...)
+	dq.SetMin(1)
+	return dq
 }
 
 func hitsToResults(ix *index.Index, res *bleve.SearchResult) []Result {
@@ -166,7 +173,7 @@ func stripHTMLHighlight(s string) string {
 func buildFilterQuery(q Query) query.Query {
 	var parts []query.Query
 	for _, tag := range q.Tags {
-		tq := bleve.NewMatchQuery(tag)
+		tq := bleve.NewTermQuery(tag)
 		tq.SetField("tags")
 		parts = append(parts, tq)
 	}
