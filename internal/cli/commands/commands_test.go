@@ -72,9 +72,16 @@ func TestAddNote(t *testing.T) {
 	addURL := NewAddURL(rt)
 	addFile := NewAddFile(rt)
 	ConfigureAddFlags(add, addNote, addURL)
+	add.AddCommand(addNote)
 	addMessage = "note body"
 	addTitle = "CLI note"
 	addTags = []string{"cli"}
+	if err := add.PersistentFlags().Set("tags", "cli"); err != nil {
+		t.Fatal(err)
+	}
+	if err := add.PersistentFlags().Set("title", "CLI note"); err != nil {
+		t.Fatal(err)
+	}
 	cmd := addNote
 	out := withStdout(t, func() {
 		if err := cmd.RunE(cmd, nil); err != nil {

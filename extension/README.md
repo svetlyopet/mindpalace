@@ -4,7 +4,7 @@ Save the current browser tab to your local Mindpalace vault via `mp serve`.
 
 ## Prerequisites
 
-1. A Mindpalace vault initialized (`mp init` or equivalent).
+1. A Mindpalace vault initialized (`mp vault init` or equivalent).
 2. `mp serve` running (default listen address `http://127.0.0.1:7451`).
 3. Vault **unlocked** — use the web UI at the server URL or `mp vault unlock` if the vault is encrypted.
 

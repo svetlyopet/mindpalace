@@ -126,3 +126,24 @@ func TestParseTagEditorText(t *testing.T) {
 		})
 	}
 }
+
+func TestParseTitleEditorText(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "header and title", in: "# title\n\nMy note\n", want: "My note"},
+		{name: "first line", in: "Hello world\n", want: "Hello world"},
+		{name: "empty", in: "# only\n\n", want: ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := ParseTitleEditorText(tt.in); got != tt.want {
+				t.Fatalf("ParseTitleEditorText() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

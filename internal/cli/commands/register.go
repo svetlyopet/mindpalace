@@ -21,6 +21,7 @@ func Register(root *cobra.Command, rt *clictx.Runtime) {
 
 	vault := NewVault(rt)
 	vault.AddCommand(
+		NewInit(rt),
 		NewVaultEncrypt(rt),
 		NewVaultDecrypt(rt),
 		NewVaultPassword(rt),
@@ -29,7 +30,6 @@ func Register(root *cobra.Command, rt *clictx.Runtime) {
 	)
 
 	root.AddCommand(
-		NewInit(rt),
 		add,
 		search,
 		list,

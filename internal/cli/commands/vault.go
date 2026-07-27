@@ -15,7 +15,8 @@ import (
 func NewVault(rt *clictx.Runtime) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vault",
-		Short: "Vault encryption, passwords, and session lock",
+		Short: "Create a vault and manage encryption, passwords, and session lock",
+		Long:  "If the vault directory does not exist or has no config yet, run mp vault init [path] to create one.",
 	}
 	clictx.MarkSkipVaultOpen(cmd)
 	return cmd

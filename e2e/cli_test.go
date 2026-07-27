@@ -40,7 +40,7 @@ func runMP(t *testing.T, vaultDir string, extraEnv []string, stdin string, args 
 
 func TestCLIHappyPath(t *testing.T) {
 	dir := t.TempDir()
-	if out, errOut, code := runMP(t, dir, nil, "", "init", dir); code != 0 {
+	if out, errOut, code := runMP(t, dir, nil, "", "vault", "init", dir); code != 0 {
 		t.Fatalf("init code=%d out=%q err=%q", code, out, errOut)
 	}
 	if _, errOut, code := runMP(t, dir, nil, "", "add", "note", "-m", "e2e body", "--title", "E2E note", "--tags", "e2e"); code != 0 {
@@ -107,7 +107,7 @@ func TestCLIHappyPath(t *testing.T) {
 
 func TestCLIEncryptedVault(t *testing.T) {
 	dir := t.TempDir()
-	if _, errOut, code := runMP(t, dir, nil, "", "init", dir); code != 0 {
+	if _, errOut, code := runMP(t, dir, nil, "", "vault", "init", dir); code != 0 {
 		t.Fatalf("init: %q", errOut)
 	}
 	if _, errOut, code := runMP(t, dir, nil, "", "add", "note", "-m", "secret", "--title", "Enc", "--tags", "sec"); code != 0 {
@@ -130,12 +130,15 @@ func TestCLIEncryptedVault(t *testing.T) {
 
 func TestCLIFailures(t *testing.T) {
 	dir := t.TempDir()
-	_, _, code := runMP(t, dir, nil, "", "search", "x")
+	_, errOut, code := runMP(t, dir, nil, "", "search", "x")
 	if code == 0 {
 		t.Fatal("expected failure on uninitialized vault")
 	}
+	if !strings.Contains(errOut, "mp vault init") {
+		t.Fatalf("stderr = %q, want mp vault init hint", errOut)
+	}
 	dir2 := t.TempDir()
-	runMP(t, dir2, nil, "", "init", dir2)
+	runMP(t, dir2, nil, "", "vault", "init", dir2)
 	_, _, code = runMP(t, dir2, nil, "", "delete", "bogus", "-y")
 	if code == 0 {
 		t.Fatal("expected failure deleting missing entry")

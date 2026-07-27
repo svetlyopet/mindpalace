@@ -3,6 +3,7 @@ package vault
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -18,6 +19,17 @@ func TestSlugify(t *testing.T) {
 		if got := Slugify(tc.in); got != tc.want {
 			t.Errorf("Slugify(%q) = %q, want %q", tc.in, got, tc.want)
 		}
+	}
+}
+
+func TestOpenMissingConfig(t *testing.T) {
+	dir := t.TempDir()
+	_, err := Open(dir)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "mp vault init") {
+		t.Fatalf("error = %q, want hint mp vault init", err.Error())
 	}
 }
 

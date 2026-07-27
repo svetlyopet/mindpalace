@@ -64,7 +64,7 @@ func Open(root string) (*Vault, error) {
 	cfgPath := ConfigPath(root)
 	if _, err := os.Stat(cfgPath); err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("not a vault: missing %s (run mp init)", configFileName)
+			return nil, fmt.Errorf("not a vault: missing %s (run mp vault init)", configFileName)
 		}
 		return nil, err
 	}

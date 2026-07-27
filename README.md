@@ -11,7 +11,7 @@ Mindpalace is a local-first personal knowledge base. Everything you capture beco
 
 ```bash
 make build
-./bin/mp init
+./bin/mp vault init
 ./bin/mp add note -m "Hello" --title "First note" --tags demo
 ./bin/mp search demo
 ./bin/mp serve --open
@@ -20,7 +20,7 @@ make build
 The web UI opens at `http://127.0.0.1:7451` by default. To use a specific vault directory:
 
 ```bash
-./bin/mp init /path/to/vault
+./bin/mp vault init /path/to/vault
 export MINDPALACE_VAULT=/path/to/vault   # or pass --vault on every command
 ```
 
@@ -53,12 +53,12 @@ If search feels stale or you removed `index/`, run `mp reindex` to rebuild deriv
 ### Capture
 
 ```bash
-mp add note -m "Body text" --title "Title" --tags tag1,tag2
-mp add url https://example.com/article --title "Optional title"
-mp add file ./document.pdf
+mp add note -m "Body text" --title "Title" --tags tag1 --tags tag2
+mp add url https://example.com/article --title "Article title" --tags web
+mp add file ./document.pdf --title "Document" --tags docs
 ```
 
-For notes, you can omit `-m` and pipe text on stdin, or use an interactive editor when attached to a TTY. `--title` is required when stdin is not a terminal. Entry types include `article`, `note`, `social`, `screenshot`, and `snippet` (see `--type` on `mp add`).
+For notes, omit `-m` and pipe text on stdin only with `--title` and `--tags`, or run `mp add note` on a TTY to use editors for body, tags, and title. Entry types include `article`, `note`, `social`, `screenshot`, and `snippet` (see `--type` on `mp add`).
 
 ### Find entries
 

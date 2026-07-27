@@ -227,6 +227,18 @@ func socialHost(host string) bool {
 	return strings.Contains(host, "mastodon.")
 }
 
+// ParseTitleEditorText returns the first non-empty line that does not start with #.
+func ParseTitleEditorText(text string) string {
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		return line
+	}
+	return ""
+}
+
 // ParseTagEditorText parses tag editor buffer text: skips blank lines and lines starting with #.
 func ParseTagEditorText(text string) []string {
 	var lines []string

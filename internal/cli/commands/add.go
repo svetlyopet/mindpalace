@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -32,8 +31,8 @@ func NewAdd(rt *clictx.Runtime) *cobra.Command {
 }
 
 func ConfigureAddFlags(add, addNote, addURL *cobra.Command) {
-	add.PersistentFlags().StringSliceVar(&addTags, "tags", nil, "tags (repeatable)")
-	add.PersistentFlags().StringVar(&addTitle, "title", "", "entry title (required when stdin is not a TTY)")
+	add.PersistentFlags().StringSliceVar(&addTags, "tags", nil, "tags (required for url, file, and note with -m or stdin)")
+	add.PersistentFlags().StringVar(&addTitle, "title", "", "entry title (required for url, file, and note with -m or stdin)")
 	add.PersistentFlags().StringVar(&addType, "type", "", "entry type")
 	addURL.Flags().BoolVar(&addFull, "full", false, "save full HTML bundle")
 	addNote.Flags().StringVarP(&addMessage, "message", "m", "", "note text")
@@ -42,7 +41,7 @@ func ConfigureAddFlags(add, addNote, addURL *cobra.Command) {
 func NewAddNote(rt *clictx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "note",
-		Short: "Add a note (-m, stdin, or editor; prompts for tags unless --tags is set)",
+		Short: "Add a note (-m/stdin need --title and --tags; TTY editor collects body, tags, then title)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body, usedEditor, err := noteBody(rt)
 			if err != nil {
@@ -52,24 +51,39 @@ func NewAddNote(rt *clictx.Runtime) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, err := input.RequireTitleOrPrompt(addTitle, "Title", capture.FirstLineTitle(strings.TrimSpace(body)))
-			if err != nil {
-				return err
-			}
-			opts.Title = title
+			trimmedBody := strings.TrimSpace(body)
+			defaultTitle := capture.FirstLineTitle(trimmedBody)
+
 			if usedEditor {
 				ed, err := rt.Config.EditorCommand()
 				if err != nil {
 					return err
 				}
-				suggested, _ := rt.Capturer.SuggestTags(context.Background(), opts.Title, body)
-				opts.Tags, err = noteTagsViaEditor(ed, opts.Tags, suggested)
-				if err != nil {
+				if !opts.TagsExplicit {
+					suggested, _ := rt.Capturer.SuggestTags(context.Background(), defaultTitle, body)
+					opts.Tags, err = noteTagsViaEditor(ed, opts.Tags, suggested)
+					if err != nil {
+						return err
+					}
+					opts.TagsExplicit = true
+					opts.Prompter = nil
+				}
+				if strings.TrimSpace(addTitle) == "" {
+					title, err := noteTitleViaEditor(ed, defaultTitle)
+					if err != nil {
+						return err
+					}
+					opts.Title = title
+				} else {
+					opts.Title = strings.TrimSpace(addTitle)
+				}
+			} else {
+				if err := requireTitleAndTags(cmd, "mp add note"); err != nil {
 					return err
 				}
-				opts.TagsExplicit = true
-				opts.Prompter = nil
+				applyRequiredCaptureFlags(&opts)
 			}
+
 			res, err := rt.Capturer.Note(context.Background(), body, opts)
 			if err != nil {
 				return err
@@ -82,27 +96,18 @@ func NewAddNote(rt *clictx.Runtime) *cobra.Command {
 func NewAddURL(rt *clictx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "url <link>",
-		Short: "Capture a URL as an article (prompts for tags on a TTY unless --tags is set)",
+		Short: "Capture a URL as an article (--title and --tags required)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := requireTitleAndTags(cmd, "mp add url"); err != nil {
+				return err
+			}
 			opts, err := addOptions(cmd)
 			if err != nil {
 				return err
 			}
+			applyRequiredCaptureFlags(&opts)
 			opts.FullHTML = addFull
-			defaultHint := ""
-			if strings.TrimSpace(addTitle) == "" && input.IsInteractive() {
-				preview, err := rt.Capturer.PreviewURL(context.Background(), args[0], opts)
-				if err != nil {
-					return err
-				}
-				defaultHint = preview.Title
-			}
-			title, err := input.RequireTitleOrPrompt(addTitle, "Title", defaultHint)
-			if err != nil {
-				return err
-			}
-			opts.Title = title
 			res, err := rt.Capturer.URL(context.Background(), args[0], opts)
 			if err != nil {
 				return err
@@ -115,21 +120,17 @@ func NewAddURL(rt *clictx.Runtime) *cobra.Command {
 func NewAddFile(rt *clictx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "file <path>",
-		Short: "Import a file (image, text, PDF; text snippets prompt for tags on a TTY)",
+		Short: "Import a file (--title and --tags required)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := requireTitleAndTags(cmd, "mp add file"); err != nil {
+				return err
+			}
 			opts, err := addOptions(cmd)
 			if err != nil {
 				return err
 			}
-			title, err := input.RequireTitleOrPrompt(addTitle, "Title", filepath.Base(args[0]))
-			if err != nil {
-				return err
-			}
-			opts.Title = title
-			if isImageFile(args[0]) {
-				opts.Prompter = nil
-			}
+			applyRequiredCaptureFlags(&opts)
 			res, err := rt.Capturer.File(context.Background(), args[0], opts)
 			if err != nil {
 				return err
@@ -139,14 +140,41 @@ func NewAddFile(rt *clictx.Runtime) *cobra.Command {
 	}
 }
 
+func requireTitleAndTags(cmd *cobra.Command, subcommand string) error {
+	if strings.TrimSpace(addTitle) == "" {
+		return fmt.Errorf("title is required (use --title with %s)", subcommand)
+	}
+	if !tagsFlagSet(cmd) || len(addTags) == 0 {
+		return fmt.Errorf("tags are required (use --tags with %s)", subcommand)
+	}
+	return nil
+}
+
+func tagsFlagSet(cmd *cobra.Command) bool {
+	for c := cmd; c != nil; c = c.Parent() {
+		if c.Flags().Changed("tags") {
+			return true
+		}
+		if c.PersistentFlags().Changed("tags") {
+			return true
+		}
+	}
+	return false
+}
+
+func applyRequiredCaptureFlags(opts *capture.Options) {
+	opts.Title = strings.TrimSpace(addTitle)
+	opts.Tags = addTags
+	opts.TagsExplicit = true
+	opts.Prompter = nil
+}
+
 func addOptions(cmd *cobra.Command) (capture.Options, error) {
 	opts := capture.Options{
 		Title: addTitle,
 		Tags:  addTags,
 	}
-	if cmd != nil {
-		opts.TagsExplicit = cmd.Flags().Changed("tags")
-	}
+	opts.TagsExplicit = tagsFlagSet(cmd)
 	if addType != "" {
 		t := vault.Type(addType)
 		if !t.Valid() {
@@ -160,15 +188,6 @@ func addOptions(cmd *cobra.Command) (capture.Options, error) {
 		opts.Prompter = input.TerminalTagPrompter{}
 	}
 	return opts, nil
-}
-
-func isImageFile(path string) bool {
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".png", ".jpg", ".jpeg", ".gif", ".webp":
-		return true
-	default:
-		return false
-	}
 }
 
 func finishCapture(rt *clictx.Runtime, res *capture.Result) error {
@@ -221,6 +240,10 @@ const tagEditorHeader = `# Tags for this note (one per line). Lines starting wit
 
 `
 
+const titleEditorHeader = `# Title for this note. Lines starting with # are ignored.
+
+`
+
 func noteTagsViaEditor(editor string, initial, suggested []string) ([]string, error) {
 	f, err := os.CreateTemp("", "mp-tags-*.txt")
 	if err != nil {
@@ -253,4 +276,37 @@ func noteTagsViaEditor(editor string, initial, suggested []string) ([]string, er
 		return nil, err
 	}
 	return capture.ParseTagEditorText(string(raw)), nil
+}
+
+func noteTitleViaEditor(editor, defaultHint string) (string, error) {
+	f, err := os.CreateTemp("", "mp-title-*.txt")
+	if err != nil {
+		return "", err
+	}
+	path := f.Name()
+	var b strings.Builder
+	b.WriteString(titleEditorHeader)
+	if defaultHint != "" {
+		b.WriteString(defaultHint)
+		b.WriteByte('\n')
+	}
+	if _, err := f.WriteString(b.String()); err != nil {
+		f.Close()
+		os.Remove(path)
+		return "", err
+	}
+	f.Close()
+	defer os.Remove(path)
+	if err := input.RunEditor(editor, path); err != nil {
+		return "", err
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	title := capture.ParseTitleEditorText(string(raw))
+	if title == "" {
+		return "", fmt.Errorf("title is required")
+	}
+	return title, nil
 }
