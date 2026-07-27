@@ -1,0 +1,86 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: release
+    outputs:
+      sbom_matrix: ${{ steps.sbom-matrix.outputs.json }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: anchore/sbom-action/download-syft@v0.20.0
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build SBOM attestation matrix
+        id: sbom-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          json="[]"
+          for sbom in dist/*.spdx.json; do
+            subject="${sbom%.spdx.json}"
+            if [[ ! -f "$subject" ]]; then
+              echo "::error::missing archive $subject for $sbom" >&2
+              exit 1
+            fi
+            json="$(jq --arg s "$subject" --arg b "$sbom" '. + [{subject:$s,sbom:$b}]' <<< "$json")"
+          done
+          if [[ "$json" == "[]" ]]; then
+            echo "::error::no SPDX SBOMs found under dist/" >&2
+            exit 1
+          fi
+          echo "json=$json" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-dist
+          path: dist/
+          retention-days: 1
+
+  attest-sbom:
+    name: Attest SBOM
+    needs: release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pair: ${{ fromJson(needs.release.outputs.sbom_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-dist
+          path: dist
+
+      - uses: ./.github/actions/attest-sbom
+        with:
+          subject-path: ${{ matrix.pair.subject }}
+          sbom-path: ${{ matrix.pair.sbom }}

@@ -4,7 +4,7 @@ Mindpalace is a local-first personal knowledge base. Everything you capture beco
 
 ## Requirements
 
-- **From source:** Go 1.25 or newer, then `make build` to produce `bin/mp`.
+- **From source:** Go 1.25 or newer, then `make build` to produce `bin/mp`. See [DEVELOPMENT.md](DEVELOPMENT.md) for contributors.
 - **Optional:** a web browser for the library UI; Chrome if you use the capture extension.
 
 ## Quick start

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/cli/commands"
+	"github.com/svetlyopet/mindpalace/internal/version"
 )
 
 // UsageError marks cobra usage failures for exit code 2.
@@ -22,6 +23,7 @@ func NewRoot() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "mp",
 		Short:         "Mindpalace — local-first knowledge base",
+		Version:       version.Info(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

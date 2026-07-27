@@ -1,0 +1,16 @@
+name: Attest SBOM
+description: GitHub Artifact SBOM attestation for one release archive and its SPDX file
+inputs:
+  subject-path:
+    description: Path to the release archive (subject)
+    required: true
+  sbom-path:
+    description: Path to the SPDX JSON SBOM
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/attest@v4
+      with:
+        subject-path: ${{ inputs.subject-path }}
+        sbom-path: ${{ inputs.sbom-path }}

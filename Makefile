@@ -3,7 +3,7 @@ BIN  ?= bin/mp
 PKG  ?= ./cmd/mp
 SERVE_FLAGS ?=
 
-.PHONY: help out build test test-race test-cover test-e2e serve clean vendor-htmx
+.PHONY: help out build test test-race test-cover test-e2e serve clean vendor-htmx release
 
 help:
 	@echo "Mindpalace — common targets:"
@@ -12,6 +12,7 @@ help:
 	@echo "  make test-race      Run go test -race ./..."
 	@echo "  make test-cover     Run tests and print coverage summary"
 	@echo "  make test-e2e       Build mp and run CLI subprocess E2E (separate from test)"
+	@echo "  make release        GoReleaser snapshot to dist/ (local only; needs syft for SBOMs)"
 	@echo "  make serve          Build and run mp serve (needs initialized vault)"
 	@echo "  make clean          Remove $(BIN)"
 	@echo "  make vendor-htmx    Download htmx into web/static/"
@@ -43,6 +44,9 @@ test-e2e: build
 
 serve: build
 	$(BIN) serve $(SERVE_FLAGS)
+
+release:
+	goreleaser release --snapshot --clean
 
 clean:
 	rm -f $(BIN)

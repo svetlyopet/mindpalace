@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+project_name: mindpalace
+
+builds:
+  - id: mp
+    main: ./cmd/mp
+    binary: mp
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/svetlyopet/mindpalace/internal/version.Version={{.Version}}
+      - -X github.com/svetlyopet/mindpalace/internal/version.Commit={{.Commit}}
+      - -X github.com/svetlyopet/mindpalace/internal/version.Date={{.Date}}
+
+archives:
+  - formats: [tar.gz]
+    name_template: "mp_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: checksums.txt
+
+sboms:
+  - id: archive
+    artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.spdx.json"
+    args: ["$artifact", "--output", "spdx-json=$document"]
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs"
+      - "^test"
+      - "^ci"
+      - "^chore"
+      - "^style"
+
+release:
+  github:
+    owner: svetlyopet
+    name: mindpalace
+  prerelease: auto
+
+git:
+  tag_sort: -version:refname
