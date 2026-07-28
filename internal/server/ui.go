@@ -13,7 +13,6 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer/html"
 	"github.com/svetlyopet/mindpalace/internal/library"
 	webassets "github.com/svetlyopet/mindpalace/web"
 	"github.com/svetlyopet/mindpalace/internal/search"
@@ -23,7 +22,6 @@ import (
 var mdRenderer = goldmark.New(
 	goldmark.WithExtensions(extension.GFM),
 	goldmark.WithParserOptions(parser.WithAutoHeadingID()),
-	goldmark.WithRendererOptions(html.WithUnsafe()),
 )
 
 var entryTypes = []string{"article", "note", "social", "screenshot", "snippet"}
@@ -170,7 +168,8 @@ func (s *Server) buildEntryViewerData(e *vault.Entry) (entryViewerData, error) {
 	hasSource := fileExists(filepath.Join(e.Dir, "source.html"))
 	showNote := strings.TrimSpace(e.Body) != ""
 	data := entryViewerData{
-		Entry:          e,
+		Entry: e,
+		// #nosec G203 -- markdown rendered without html.WithUnsafe; trusted as formatted note content.
 		BodyHTML:       template.HTML(bodyHTML),
 		HasSourceHTML:  hasSource,
 		ShowNoteTab:    showNote,

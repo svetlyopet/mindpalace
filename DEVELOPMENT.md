@@ -55,10 +55,11 @@ If you rename or split this workflow, re-select required status checks under bra
 
 These workflows run only after [`ci`](.github/workflows/ci.yml) completes successfully (`workflow_run`). They do not run on tag/release workflows.
 
-| Workflow | Tools | Results |
-| --- | --- | --- |
-| [`.github/workflows/sast.yml`](.github/workflows/sast.yml) | [gosec](https://github.com/securego/gosec), [Semgrep](https://semgrep.dev/) (`p/golang`, `p/security-audit`), [govulncheck](https://go.dev/security/vuln/) | gosec/Semgrep SARIF → **Security → Code scanning**; failures fail the workflow |
-| [`.github/workflows/dast.yml`](.github/workflows/dast.yml) | [OWASP ZAP](https://www.zaproxy.org/) baseline against `mp serve` on loopback | Actions job log and ZAP report artifacts from the action |
+| Workflow                                                   | Tools | Results |
+|------------------------------------------------------------| --- | --- |
+| [`.github/workflows/scan.yml`](.github/workflows/scan.yml) | [gosec](https://github.com/securego/gosec), [Semgrep](https://semgrep.dev/) (`p/golang`, `p/security-audit`), [govulncheck](https://go.dev/security/vuln/) | gosec/Semgrep SARIF → **Security → Code scanning**; failures fail the workflow |
+
+The local UI renders note markdown without raw HTML (inline HTML in notes is escaped, not executed).
 
 Both check out the same commit CI tested (`workflow_run.head_sha`). `sast` and `dast` must exist on the default branch before they trigger on pull requests.
 
