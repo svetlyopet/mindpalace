@@ -9,9 +9,9 @@ import (
 
 // VaultConfig holds optional encryption settings.
 type VaultConfig struct {
-	Encrypted  bool         `yaml:"encrypted"`
-	KDF        VaultKDF     `yaml:"kdf"`
-	WrappedKey string       `yaml:"wrapped_key"`
+	Encrypted  bool     `yaml:"encrypted"`
+	KDF        VaultKDF `yaml:"kdf"`
+	WrappedKey string   `yaml:"wrapped_key"`
 }
 
 type VaultKDF struct {

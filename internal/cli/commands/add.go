@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/svetlyopet/mindpalace/internal/capture"
-	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/cli/input"
+	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/fsutil"
 	"github.com/svetlyopet/mindpalace/internal/library"
 	"github.com/svetlyopet/mindpalace/internal/vault"

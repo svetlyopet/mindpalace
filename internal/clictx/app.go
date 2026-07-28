@@ -17,13 +17,13 @@ type App struct {
 	VaultFlag string
 	JSON      bool
 
-	Root      string
-	Config    *config.Config
-	Vault     *vault.Vault
-	Index     *index.Index
-	Searcher  *search.Searcher
-	Capturer  *capture.Capturer
-	Lib       *library.Library
+	Root     string
+	Config   *config.Config
+	Vault    *vault.Vault
+	Index    *index.Index
+	Searcher *search.Searcher
+	Capturer *capture.Capturer
+	Lib      *library.Library
 }
 
 func (a *App) Open() error {

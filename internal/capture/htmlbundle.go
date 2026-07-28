@@ -18,16 +18,16 @@ import (
 )
 
 const (
-	maxAssetBytes   = 5 << 20
-	maxAssetCount   = 50
-	assetsDirName   = "assets"
-	sourceHTMLName  = "source.html"
+	maxAssetBytes  = 5 << 20
+	maxAssetCount  = 50
+	assetsDirName  = "assets"
+	sourceHTMLName = "source.html"
 )
 
 type assetRef struct {
-	node         *html.Node
-	attr         string
-	raw          string
+	node             *html.Node
+	attr             string
+	raw              string
 	allowCrossOrigin bool
 }
 

@@ -25,7 +25,7 @@ func (c *Capturer) PreviewNote(ctx context.Context, body string, opts Options) (
 	}
 	title := opts.Title
 	if title == "" {
-	title = FirstLineTitle(body)
+		title = FirstLineTitle(body)
 	}
 	entryType := vault.TypeNote
 	if opts.Type != "" {

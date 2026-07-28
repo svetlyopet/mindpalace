@@ -14,7 +14,7 @@ func NewInit(rt *clictx.Runtime) *cobra.Command {
 		Use:     "init [path]",
 		Short:   "Create a new vault at a path",
 		Example: "  mp vault init\n  mp vault init ~/my-vault",
-		Args:  cobra.MaximumNArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			root := rt.VaultFlag
 			if len(args) == 1 {

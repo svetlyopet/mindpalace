@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/svetlyopet/mindpalace/internal/capture"
-	"github.com/svetlyopet/mindpalace/internal/cliformat"
 	"github.com/svetlyopet/mindpalace/internal/clictx"
+	"github.com/svetlyopet/mindpalace/internal/cliformat"
 	"github.com/svetlyopet/mindpalace/internal/dto"
 	"github.com/svetlyopet/mindpalace/internal/library"
 	"github.com/svetlyopet/mindpalace/internal/search"

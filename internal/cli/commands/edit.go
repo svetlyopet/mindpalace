@@ -2,8 +2,8 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/cli/input"
+	"github.com/svetlyopet/mindpalace/internal/clictx"
 )
 
 func NewEdit(rt *clictx.Runtime) *cobra.Command {

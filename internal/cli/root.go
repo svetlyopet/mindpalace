@@ -2,8 +2,8 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/cli/commands"
+	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/version"
 )
 

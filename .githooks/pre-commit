@@ -1,0 +1,42 @@
+#!/bin/bash
+
+STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.go$")
+
+function make-fmt() {
+  # only format if Go files have changed
+  if [ ! -z "$STAGED_GO_FILES" ]; then
+    echo 'Running `make fmt`.'
+    make fmt
+    git add -A
+    echo 'Formatting completed.'
+  fi
+}
+
+function make-lint() {
+  # only lint if Go files have changed
+  if [ ! -z "$STAGED_GO_FILES" ]; then
+    echo 'Running `make lint`.'
+    make lint
+    echo 'API linting completed.'
+  fi
+}
+
+function secrets-scan() {
+  echo 'Running secrets scan with gitleaks.'
+  gitleaks git --verbose --pre-commit
+}
+
+# inform about failed pre-push hook
+function failed {
+  echo ''
+  echo -e "pre-commit hook failed... You cannot commit!"
+  echo ''
+
+  exit 1
+}
+
+trap 'failed' ERR
+
+make-fmt
+make-lint
+secrets-scan

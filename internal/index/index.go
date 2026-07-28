@@ -23,14 +23,14 @@ import (
 const mappingVersion = "2"
 
 type EntryMeta struct {
-	ID      string      `json:"id"`
-	Title   string      `json:"title"`
-	Created time.Time   `json:"created"`
-	Type    vault.Type  `json:"type"`
-	Source  string      `json:"source,omitempty"`
-	Tags    []string    `json:"tags,omitempty"`
-	Dir     string      `json:"dir"`
-	MTime   time.Time   `json:"mtime"`
+	ID      string     `json:"id"`
+	Title   string     `json:"title"`
+	Created time.Time  `json:"created"`
+	Type    vault.Type `json:"type"`
+	Source  string     `json:"source,omitempty"`
+	Tags    []string   `json:"tags,omitempty"`
+	Dir     string     `json:"dir"`
+	MTime   time.Time  `json:"mtime"`
 }
 
 type Index struct {

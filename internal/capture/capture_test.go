@@ -97,7 +97,7 @@ func TestParseTagEditorText(t *testing.T) {
 	}{
 		{
 			name: "comments and blanks",
-			in: "# tags\n\nwork\n\n# ignore\nideas\n",
+			in:   "# tags\n\nwork\n\n# ignore\nideas\n",
 			want: []string{"work", "ideas"},
 		},
 		{

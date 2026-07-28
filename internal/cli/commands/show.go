@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/cli/output"
+	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/dto"
 )
 

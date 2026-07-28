@@ -128,8 +128,8 @@ func TestAPICapturePreview(t *testing.T) {
 		t.Fatalf("status = %d", resp.StatusCode)
 	}
 	var out struct {
-		Title          string   `json:"title"`
-		SuggestedTags  []string `json:"suggested_tags"`
+		Title         string   `json:"title"`
+		SuggestedTags []string `json:"suggested_tags"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		t.Fatal(err)

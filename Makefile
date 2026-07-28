@@ -7,10 +7,13 @@ GOSEC        ?= github.com/securego/gosec/v2/cmd/gosec
 GOSEC_ARGS   ?=
 GOVULNCHECK   ?= golang.org/x/vuln/cmd/govulncheck
 
-.PHONY: help out build test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck sast-go
+.PHONY: help setup-hooks fmt lint out build test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck
 
 help:
 	@echo "Mindpalace — common targets:"
+	@echo "  make setup-hooks    Enable local git pre-commit hooks (.githooks)"
+	@echo "  make fmt            Format Go files with gofmt"
+	@echo "  make lint           Lint Go files"
 	@echo "  make build          Build $(BIN)"
 	@echo "  make test           Run go test ./..."
 	@echo "  make test-race      Run go test -race ./..."
@@ -28,6 +31,16 @@ help:
 	@echo "  SERVE_FLAGS=...     Passed to mp serve (e.g. --open, --addr HOST:PORT)"
 	@echo ""
 	@echo "Chrome extension      Load unpacked: extension/ (see extension/README.md)"
+
+setup-hooks:
+	@./scripts/setup-hooks.sh
+
+fmt:
+	@go fmt ./...
+	@go tool goimports -w .
+
+lint:
+	@go tool golangci-lint run
 
 out:
 	@mkdir -p $(dir $(BIN))

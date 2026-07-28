@@ -10,13 +10,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/svetlyopet/mindpalace/internal/library"
+	"github.com/svetlyopet/mindpalace/internal/search"
+	"github.com/svetlyopet/mindpalace/internal/vault"
+	webassets "github.com/svetlyopet/mindpalace/web"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	"github.com/svetlyopet/mindpalace/internal/library"
-	webassets "github.com/svetlyopet/mindpalace/web"
-	"github.com/svetlyopet/mindpalace/internal/search"
-	"github.com/svetlyopet/mindpalace/internal/vault"
 )
 
 var mdRenderer = goldmark.New(
@@ -77,12 +77,12 @@ func (s *Server) handleUIEntryFile(w http.ResponseWriter, r *http.Request) {
 }
 
 type entryViewerData struct {
-	Entry           *vault.Entry
-	BodyHTML        template.HTML
-	ScreenshotURL   string
-	HasSourceHTML   bool
-	ShowNoteTab     bool
-	DefaultTabPage  bool
+	Entry          *vault.Entry
+	BodyHTML       template.HTML
+	ScreenshotURL  string
+	HasSourceHTML  bool
+	ShowNoteTab    bool
+	DefaultTabPage bool
 }
 
 type shellPageData struct {
