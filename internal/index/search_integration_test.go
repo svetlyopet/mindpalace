@@ -51,14 +51,22 @@ func TestSearchFindsTitleAndBody(t *testing.T) {
 
 func TestSearchMultiWord(t *testing.T) {
 	dir := t.TempDir()
-	vault.Init(dir)
-	os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("editor: \"\"\n"), 0o644)
+	if _, err := vault.Init(dir); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("editor: \"\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	v, _ := vault.Open(dir)
 	e := &vault.Entry{ID: "s2", Title: "Golang Concurrency", Created: time.Now(), Type: vault.TypeNote, Body: "patterns"}
-	v.Create(e)
+	if err := v.Create(e); err != nil {
+		t.Fatal(err)
+	}
 	ix, _ := index.Open(dir)
 	defer ix.Close()
-	ix.Put(e)
+	if err := ix.Put(e); err != nil {
+		t.Fatal(err)
+	}
 	sr := search.New(ix)
 	for _, qtext := range []string{"Golang Concurrency", "golang patterns", "missing word"} {
 		res, _ := sr.Search(context.Background(), search.Query{Text: qtext, Limit: 10})

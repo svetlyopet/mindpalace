@@ -161,11 +161,3 @@ func TestBundlePage_svgSanitized(t *testing.T) {
 		t.Fatalf("script in stored svg: %s", data)
 	}
 }
-
-func mustParseURL(s string) *url.URL {
-	u, err := url.Parse(s)
-	if err != nil {
-		panic(err)
-	}
-	return u
-}

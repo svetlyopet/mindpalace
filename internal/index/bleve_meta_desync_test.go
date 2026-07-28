@@ -14,13 +14,21 @@ import (
 
 func TestFullTextSearchEmptyWhenBleveRecreatedButMetaStale(t *testing.T) {
 	dir := t.TempDir()
-	vault.Init(dir)
-	os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("editor: \"\"\n"), 0o644)
+	if _, err := vault.Init(dir); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("editor: \"\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	v, _ := vault.Open(dir)
 	e := &vault.Entry{ID: "desync1", Title: "UniqueKeywordTitle", Created: time.Now(), Type: vault.TypeNote, Body: "UniquePayloadWord"}
-	v.Create(e)
+	if err := v.Create(e); err != nil {
+		t.Fatal(err)
+	}
 	ix, _ := index.Open(dir)
-	ix.Put(e)
+	if err := ix.Put(e); err != nil {
+		t.Fatal(err)
+	}
 	ix.Close()
 
 	bleveDir := vault.IndexDir(dir)

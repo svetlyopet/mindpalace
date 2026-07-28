@@ -230,10 +230,6 @@ func normalizeStylesheetExt(ext, ct string, data []byte) string {
 	return ext
 }
 
-func resolveSameOrigin(page *url.URL, raw string) (*url.URL, bool) {
-	return resolveBundleAsset(page, raw, false)
-}
-
 func fetchAsset(ctx context.Context, client *http.Client, u *url.URL) ([]byte, string, string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

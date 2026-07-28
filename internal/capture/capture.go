@@ -105,7 +105,8 @@ func (c *Capturer) File(ctx context.Context, path string, opts Options) (*Result
 	case ".png", ".jpg", ".jpeg", ".gif", ".webp":
 		res, err = c.captureImage(ctx, path, opts)
 	default:
-		data, err := os.ReadFile(path)
+		var data []byte
+		data, err = os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}

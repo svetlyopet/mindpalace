@@ -33,7 +33,6 @@ func TestRequireTitleAndTags(t *testing.T) {
 	t.Run("missing title", func(t *testing.T) {
 		addTitle = "  "
 		addTags = []string{"a"}
-		child.Flags().Set("tags", "a")
 		if err := requireTitleAndTags(child, "mp add note"); err == nil || !strings.Contains(err.Error(), "title") {
 			t.Fatalf("err = %v", err)
 		}

@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/svetlyopet/mindpalace/internal/config"
@@ -21,7 +20,6 @@ type Server struct {
 
 	httpServer  *http.Server
 	watcherStop func()
-	mu          sync.Mutex
 }
 
 func New(lib *library.Library, cfg *config.Config, token string) *Server {
