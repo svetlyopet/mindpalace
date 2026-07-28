@@ -6,7 +6,7 @@
       <p class="entry-byline">
         <time datetime="{{.Entry.Created.Format "2006-01-02T15:04:05Z07:00"}}">{{.Entry.Created.Format "2006-01-02 15:04"}}</time>
         <span class="type-badge">{{.Entry.Type}}</span>
-        {{if .Entry.Source}}<a class="source-link" href="{{.Entry.Source}}" target="_blank" rel="noopener">{{.Entry.Source}}</a>{{end}}
+        {{if .SourceLinkHTML}}{{.SourceLinkHTML}}{{end}}
       </p>
       {{if .Entry.Tags}}
       <p class="entry-tags">
@@ -28,15 +28,27 @@
   {{if and .HasSourceHTML .ShowNoteTab}}
   <div class="entry-tabs">
     <div class="tab-bar" role="tablist">
-      <button type="button" class="tab-btn{{if .DefaultTabPage}} is-active{{end}}" data-tab="page" role="tab">Saved page</button>
-      <button type="button" class="tab-btn{{if not .DefaultTabPage}} is-active{{end}}" data-tab="note" role="tab">Note</button>
+      <button type="button" class="{{.TabPageBtnClass}}" data-tab="page" role="tab">Saved page</button>
+      <button type="button" class="{{.TabNoteBtnClass}}" data-tab="note" role="tab">Note</button>
     </div>
-    <div class="tab-panel viewer-frame-wrap" data-panel="page"{{if not .DefaultTabPage}} hidden{{end}}>
+    {{if .TabPageHidden}}
+    <div class="tab-panel viewer-frame-wrap" data-panel="page" hidden>
       <iframe class="viewer-frame preview" sandbox="" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
     </div>
-    <div class="tab-panel" data-panel="note"{{if .DefaultTabPage}} hidden{{end}}>
+    {{else}}
+    <div class="tab-panel viewer-frame-wrap" data-panel="page">
+      <iframe class="viewer-frame preview" sandbox="" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
+    </div>
+    {{end}}
+    {{if .TabNoteHidden}}
+    <div class="tab-panel" data-panel="note" hidden>
       <div class="entry-body prose">{{.BodyHTML}}</div>
     </div>
+    {{else}}
+    <div class="tab-panel" data-panel="note">
+      <div class="entry-body prose">{{.BodyHTML}}</div>
+    </div>
+    {{end}}
   </div>
   {{else if .HasSourceHTML}}
   <div class="viewer-frame-wrap">

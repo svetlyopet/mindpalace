@@ -1,7 +1,7 @@
 {{define "partials/sidebar.html"}}
 <nav class="sidebar-nav">
-  <a href="/" class="nav-link{{if eq .ActiveNav "library"}} is-active{{end}}">Library</a>
-  <a href="/tags" class="nav-link{{if eq .ActiveNav "tags"}} is-active{{end}}">Tags</a>
+  <a href="/" class="{{.NavLibraryClass}}">Library</a>
+  <a href="/tags" class="{{.NavTagsClass}}">Tags</a>
 </nav>
 
 {{if .Tag}}
@@ -15,8 +15,8 @@
   <label class="filter-label">Type
     <select name="type" form="filters">
       <option value="">All types</option>
-      {{range .Types}}
-      <option value="{{.}}" {{if eq $.TypeFilter .}}selected{{end}}>{{.}}</option>
+      {{range .TypeOptions}}
+      {{if .Selected}}<option value="{{.Value}}" selected="selected">{{.Label}}</option>{{else}}<option value="{{.Value}}">{{.Label}}</option>{{end}}
       {{end}}
     </select>
   </label>

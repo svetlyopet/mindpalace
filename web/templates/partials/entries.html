@@ -1,6 +1,6 @@
 {{define "partials/entries.html"}}
 {{range .Results}}
-<div class="entry-row{{if eq $.SelectedID .Meta.ID}} is-selected{{end}}">
+<div class="{{.RowClass}}">
   <a href="/entry/{{.Meta.ID}}"
      hx-get="/ui/entry/{{.Meta.ID}}"
      hx-target="#viewer"

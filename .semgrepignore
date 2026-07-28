@@ -1,0 +1,2 @@
+# Session cookies: Secure is TLS-gated; local HTTP serve by default (see DEVELOPMENT.md / .gosec.json G124).
+internal/server/session.go

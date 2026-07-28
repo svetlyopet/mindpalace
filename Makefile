@@ -6,8 +6,10 @@ SERVE_FLAGS ?=
 GOSEC        ?= github.com/securego/gosec/v2/cmd/gosec
 GOSEC_ARGS   ?= -conf .gosec.json
 GOVULNCHECK   ?= golang.org/x/vuln/cmd/govulncheck
+SEMGREP       ?= semgrep
+SEMGREP_CONFIGS ?= --config p/golang --config p/security-audit
 
-.PHONY: help setup-hooks fmt lint out build test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck
+.PHONY: help setup-hooks fmt lint out build test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck semgrep
 
 help:
 	@echo "Mindpalace — common targets:"
@@ -21,6 +23,7 @@ help:
 	@echo "  make test-e2e       Build mp and run CLI subprocess E2E (separate from test)"
 	@echo "  make release        GoReleaser snapshot to dist/ (local only; needs syft for SBOMs)"
 	@echo "  make gosec          Run gosec (pinned in go.mod)"
+	@echo "  make semgrep        Run Semgrep (p/golang, p/security-audit; needs semgrep on PATH)"
 	@echo "  make govulncheck    Run govulncheck (pinned in go.mod)"
 	@echo "  make serve          Build and run mp serve (needs initialized vault)"
 	@echo "  make clean          Remove $(BIN)"
@@ -72,6 +75,9 @@ gosec:
 
 govulncheck:
 	$(GO) run $(GOVULNCHECK) ./...
+
+semgrep:
+	$(SEMGREP) scan $(SEMGREP_CONFIGS) --error .
 
 clean:
 	rm -f $(BIN)

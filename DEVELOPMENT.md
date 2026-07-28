@@ -44,6 +44,20 @@ make govulncheck    # dependency vulnerability scan for code paths you use
 
 Line-level `#nosec` for G203/G304 remains on a few call sites where file-wide exclusion would be too broad.
 
+### Semgrep
+
+```bash
+make semgrep    # same rulesets as CI semgrep job (requires semgrep on PATH)
+```
+
+Path exclusions use [`.semgrepignore`](.semgrepignore) ([Ignoring files, folders, and code](https://semgrep.dev/docs/ignoring-files-folders-code)). That file skips all Semgrep rules on listed paths:
+
+| Path | Why |
+|------|-----|
+| `internal/server/session.go` | `cookie-missing-secure` false positive on local HTTP; `Secure` is set when `r.TLS != nil` (same rationale as gosec G124 above) |
+
+Template XSS hardening uses validated source links and Go-computed CSS classes in [`internal/server/ui.go`](internal/server/ui.go). [`internal/server/ui_safeurl.go`](internal/server/ui_safeurl.go) keeps an inline `# nosemgrep` on `sourceLinkHTML` (file-wide ignore would drop other Go rules on that file).
+
 Semgrep and OWASP ZAP remain CI-only (Python/Docker actions); see **Security scanning**.
 
 ## Local release snapshot

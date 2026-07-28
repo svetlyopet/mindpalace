@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/svetlyopet/mindpalace/internal/index"
 	"github.com/svetlyopet/mindpalace/internal/library"
 	"github.com/svetlyopet/mindpalace/internal/search"
 	"github.com/svetlyopet/mindpalace/internal/vault"
@@ -77,26 +78,46 @@ func (s *Server) handleUIEntryFile(w http.ResponseWriter, r *http.Request) {
 }
 
 type entryViewerData struct {
-	Entry          *vault.Entry
-	BodyHTML       template.HTML
-	ScreenshotURL  string
-	HasSourceHTML  bool
-	ShowNoteTab    bool
-	DefaultTabPage bool
+	Entry           *vault.Entry
+	BodyHTML        template.HTML
+	ScreenshotURL   string
+	HasSourceHTML   bool
+	ShowNoteTab     bool
+	DefaultTabPage  bool
+	SourceLinkHTML  template.HTML
+	TabPageHidden   bool
+	TabNoteHidden   bool
+	TabPageBtnClass string
+	TabNoteBtnClass string
+}
+
+type typeFilterOption struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
+type entryListRow struct {
+	Meta      index.EntryMeta
+	Score     float64
+	Fragments []string
+	RowClass  string
 }
 
 type shellPageData struct {
-	Token      string
-	Query      string
-	Tag        string
-	TypeFilter string
-	Since      string
-	Types      []string
-	Results    any
-	SelectedID string
-	ActiveNav  string
-	TagCounts  []search.TagCount
-	Viewer     entryViewerData
+	Token           string
+	Query           string
+	Tag             string
+	TypeFilter      string
+	Since           string
+	NavLibraryClass string
+	NavTagsClass    string
+	TypeOptions     []typeFilterOption
+	Results         []entryListRow
+	SelectedID      string
+	ActiveNav       string
+	TagCounts       []search.TagCount
+	Viewer          entryViewerData
 }
 
 func (s *Server) buildShellData(r *http.Request, selectedID, activeNav string) (shellPageData, error) {
@@ -108,16 +129,19 @@ func (s *Server) buildShellData(r *http.Request, selectedID, activeNav string) (
 	if err != nil {
 		return shellPageData{}, err
 	}
+	typeFilter := r.URL.Query().Get("type")
 	return shellPageData{
-		Token:      s.token,
-		Query:      r.URL.Query().Get("q"),
-		Tag:        r.URL.Query().Get("tag"),
-		TypeFilter: r.URL.Query().Get("type"),
-		Since:      r.URL.Query().Get("since"),
-		Types:      entryTypes,
-		Results:    results,
-		SelectedID: selectedID,
-		ActiveNav:  activeNav,
+		Token:           s.token,
+		Query:           r.URL.Query().Get("q"),
+		Tag:             r.URL.Query().Get("tag"),
+		TypeFilter:      typeFilter,
+		Since:           r.URL.Query().Get("since"),
+		NavLibraryClass: navLinkClass(activeNav, "library"),
+		NavTagsClass:    navLinkClass(activeNav, "tags"),
+		TypeOptions:     buildTypeFilterOptions(entryTypes, typeFilter),
+		Results:         entryRowsFromResults(results, selectedID),
+		SelectedID:      selectedID,
+		ActiveNav:       activeNav,
 	}, nil
 }
 
@@ -174,6 +198,13 @@ func (s *Server) buildEntryViewerData(e *vault.Entry) (entryViewerData, error) {
 		HasSourceHTML:  hasSource,
 		ShowNoteTab:    showNote,
 		DefaultTabPage: hasSource,
+	}
+	data.TabPageHidden = !data.DefaultTabPage
+	data.TabNoteHidden = data.DefaultTabPage
+	data.TabPageBtnClass = tabBtnClass(data.DefaultTabPage)
+	data.TabNoteBtnClass = tabBtnClass(!data.DefaultTabPage)
+	if href, ok := safeHTTPURL(e.Source); ok {
+		data.SourceLinkHTML = sourceLinkHTML(href, href)
 	}
 	for _, name := range []string{"screenshot.png", "screenshot.jpg", "screenshot.gif", "screenshot.webp"} {
 		if fileExists(filepath.Join(e.Dir, name)) {
