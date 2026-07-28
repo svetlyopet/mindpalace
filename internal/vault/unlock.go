@@ -87,7 +87,7 @@ func (v *Vault) RestoreFromSession() error {
 		return nil
 	}
 	path := v.sessionPath()
-	data, err := os.ReadFile(path)
+	data, err := ReadFileBytes(path, nil)
 	if err != nil {
 		return ErrLocked
 	}

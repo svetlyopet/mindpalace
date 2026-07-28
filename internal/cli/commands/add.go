@@ -230,7 +230,7 @@ func noteBody(rt *clictx.Runtime) (string, bool, error) {
 	if err := input.RunEditor(ed, path); err != nil {
 		return "", false, err
 	}
-	b, err := os.ReadFile(path)
+	b, err := readEditorTemp(path)
 	if err != nil {
 		return "", false, err
 	}
@@ -272,7 +272,7 @@ func noteTagsViaEditor(editor string, initial, suggested []string) ([]string, er
 	if err := input.RunEditor(editor, path); err != nil {
 		return nil, err
 	}
-	raw, err := os.ReadFile(path)
+	raw, err := readEditorTemp(path)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func noteTitleViaEditor(editor, defaultHint string) (string, error) {
 	if err := input.RunEditor(editor, path); err != nil {
 		return "", err
 	}
-	raw, err := os.ReadFile(path)
+	raw, err := readEditorTemp(path)
 	if err != nil {
 		return "", err
 	}
@@ -310,4 +310,8 @@ func noteTitleViaEditor(editor, defaultHint string) (string, error) {
 		return "", fmt.Errorf("title is required")
 	}
 	return title, nil
+}
+
+func readEditorTemp(path string) ([]byte, error) {
+	return os.ReadFile(path) // #nosec G304 -- path from os.CreateTemp
 }

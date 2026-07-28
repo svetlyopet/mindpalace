@@ -15,7 +15,7 @@ import (
 
 func ReadEntry(dir string, c *Cipher) (*Entry, error) {
 	path := filepath.Join(dir, "entry.md")
-	data, err := os.ReadFile(path)
+	data, err := ReadFileBytes(path, c)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}

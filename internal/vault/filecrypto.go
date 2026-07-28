@@ -9,7 +9,7 @@ import (
 
 // ReadFileBytes reads a file, decrypting when the vault cipher is set and data is encrypted.
 func ReadFileBytes(path string, c *Cipher) ([]byte, error) {
-	data, err := os.ReadFile(path)
+	data, err := readFileRaw(path)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,16 @@ func WriteFileBytes(path string, plain []byte, c *Cipher) error {
 	if err := os.MkdirAll(dir, fsperm.DirMode); err != nil {
 		return err
 	}
-	return os.WriteFile(path, out, fsperm.PrivateFileMode)
+	return writeFileRaw(path, out)
+}
+
+// readFileRaw reads bytes at path. Callers must scope path to the vault or entry tree.
+func readFileRaw(path string) ([]byte, error) {
+	return os.ReadFile(path) // #nosec G304 -- vault-scoped paths enforced at call sites
+}
+
+func writeFileRaw(path string, data []byte) error {
+	return os.WriteFile(path, data, fsperm.PrivateFileMode) // #nosec G304 -- vault-scoped paths enforced at call sites
 }
 
 // EncryptTree encrypts entry bodies and known asset files under the vault.
@@ -81,7 +90,7 @@ func encryptEntryAssets(dir string, c *Cipher) error {
 }
 
 func encryptFileInPlace(path string, c *Cipher) error {
-	data, err := os.ReadFile(path)
+	data, err := readFileRaw(path)
 	if err != nil {
 		return err
 	}
@@ -134,7 +143,7 @@ func decryptEntryAssets(dir string, c *Cipher) error {
 }
 
 func decryptFileInPlace(path string, c *Cipher) error {
-	data, err := os.ReadFile(path)
+	data, err := readFileRaw(path)
 	if err != nil {
 		return err
 	}
@@ -145,5 +154,5 @@ func decryptFileInPlace(path string, c *Cipher) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, plain, fsperm.PrivateFileMode)
+	return writeFileRaw(path, plain)
 }

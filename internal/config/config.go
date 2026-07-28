@@ -73,7 +73,7 @@ func Default() *Config {
 func Load(vaultRoot string) (*Config, error) {
 	cfg := Default()
 	path := vault.ConfigPath(vaultRoot)
-	data, err := os.ReadFile(path)
+	data, err := vault.ReadFileBytes(path, nil)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return cfg, nil

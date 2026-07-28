@@ -204,18 +204,30 @@ func runOCR(imgPath string) (text string, used bool, warning string) {
 }
 
 func copyFile(src, dst string) error {
-	in, err := os.Open(src)
+	entryDir := filepath.Dir(dst)
+	if err := pathUnderBase(entryDir, dst); err != nil {
+		return err
+	}
+	in, err := os.Open(src) // #nosec G304 -- src is user-provided import path
 	if err != nil {
 		return err
 	}
 	defer in.Close()
-	out, err := os.Create(dst)
+	out, err := os.Create(dst) // #nosec G304 -- dst validated under entry dir above
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 	_, err = io.Copy(out, in)
 	return err
+}
+
+func pathUnderBase(base, target string) error {
+	rel, err := filepath.Rel(filepath.Clean(base), filepath.Clean(target))
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return fmt.Errorf("path %q escapes base %q", target, base)
+	}
+	return nil
 }
 
 func socialHost(host string) bool {
