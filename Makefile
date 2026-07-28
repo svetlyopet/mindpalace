@@ -4,7 +4,7 @@ PKG  ?= ./cmd/mp
 SERVE_FLAGS ?=
 
 GOSEC        ?= github.com/securego/gosec/v2/cmd/gosec
-GOSEC_ARGS   ?=
+GOSEC_ARGS   ?= -conf .gosec.json
 GOVULNCHECK   ?= golang.org/x/vuln/cmd/govulncheck
 
 .PHONY: help setup-hooks fmt lint out build test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck

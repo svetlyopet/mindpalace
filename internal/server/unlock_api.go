@@ -19,7 +19,7 @@ func (s *Server) apiSessionHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "locked", http.StatusUnauthorized)
 		return
 	}
-	s.setSessionCookie(w)
+	s.setSessionCookie(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -39,7 +39,7 @@ func (s *Server) apiUnlockHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !s.lib.Vault.Encrypted() {
-		s.setSessionCookie(w)
+		s.setSessionCookie(w, r)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -49,14 +49,14 @@ func (s *Server) apiUnlockHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = s.lib.Vault.PersistUnlockSession()
 	_ = s.lib.Index.Refresh(r.Context(), s.lib.Vault)
-	s.setSessionCookie(w)
+	s.setSessionCookie(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) apiLock(w http.ResponseWriter, r *http.Request) {
 	s.lib.Vault.Lock()
 	_ = s.lib.Vault.ClearUnlockSession()
-	s.clearSessionCookie(w)
+	s.clearSessionCookie(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }
 

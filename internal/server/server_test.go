@@ -302,6 +302,7 @@ func TestAPICaptureWithSessionCookie(t *testing.T) {
 	if resp.StatusCode != http.StatusNoContent {
 		t.Fatalf("session status = %d", resp.StatusCode)
 	}
+	assertSessionSetCookie(t, resp)
 
 	body := `{"kind":"note","text":"cookie auth note","title":"Cookie note"}`
 	req, _ := http.NewRequest(http.MethodPost, ts.URL+"/api/capture", strings.NewReader(body))
@@ -313,6 +314,29 @@ func TestAPICaptureWithSessionCookie(t *testing.T) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusCreated {
 		t.Fatalf("status = %d", resp.StatusCode)
+	}
+}
+
+func assertSessionSetCookie(t *testing.T, resp *http.Response) {
+	t.Helper()
+	var session *http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == sessionCookie {
+			session = c
+			break
+		}
+	}
+	if session == nil {
+		t.Fatal("missing mp_session Set-Cookie")
+	}
+	if !session.HttpOnly {
+		t.Fatal("expected HttpOnly on session cookie")
+	}
+	if session.SameSite != http.SameSiteStrictMode {
+		t.Fatalf("SameSite = %v, want Strict", session.SameSite)
+	}
+	if session.Secure {
+		t.Fatal("expected Secure false on plain HTTP test server")
 	}
 }
 

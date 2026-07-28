@@ -29,6 +29,21 @@ make gosec          # Go SAST (same family as CI gosec job)
 make govulncheck    # dependency vulnerability scan for code paths you use
 ```
 
+### gosec exclusions
+
+[`.gosec.json`](.gosec.json) configures path-based rule exclusions (`-conf .gosec.json` in `make gosec` and CI). Rationale for each entry:
+
+| Path | Rules | Why |
+|------|-------|-----|
+| `internal/config/config.go` | G101 | `APIKeyEnv` default is an environment variable **name**, not a secret |
+| `internal/server/session.go` | G124 | Local HTTP serve by design; `Secure` is set when the request uses TLS |
+| `internal/cli/input/editor.go` | G204 | Editor binary from `LookPath`; note path is a temp file |
+| `internal/cli/commands/open.go` | G204 | User-invoked `open` / `xdg-open` for vault entry URLs or dirs |
+| `internal/cli/commands/serve.go` | G204 | Same for optional `--open` browser URL |
+| `internal/capture/capture.go` | G204 | Fixed `tesseract` binary; image path is capture/upload temp |
+
+Line-level `#nosec` for G203/G304 remains on a few call sites where file-wide exclusion would be too broad.
+
 Semgrep and OWASP ZAP remain CI-only (Python/Docker actions); see **Security scanning**.
 
 ## Local release snapshot

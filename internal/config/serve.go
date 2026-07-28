@@ -75,6 +75,21 @@ func (c *Config) validateServe(allowWildcard bool) error {
 	return ValidateServeAddr(c.Serve.Addr, allowWildcard)
 }
 
+// ServeAddrLoopback reports whether the listen address host is loopback-only.
+func ServeAddrLoopback(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+	host = strings.Trim(host, "[]")
+	switch host {
+	case "127.0.0.1", "localhost", "::1":
+		return true
+	default:
+		return false
+	}
+}
+
 // PrepareServe validates listen address before starting the server.
 func (c *Config) PrepareServe(allowWildcard bool) error {
 	return c.validateServe(allowWildcard)

@@ -38,7 +38,11 @@ func (s *Server) verifySession(value string) bool {
 	return value == s.signSession(exp)
 }
 
-func (s *Server) setSessionCookie(w http.ResponseWriter) {
+func sessionCookieSecure(r *http.Request) bool {
+	return r != nil && r.TLS != nil
+}
+
+func (s *Server) setSessionCookie(w http.ResponseWriter, r *http.Request) {
 	exp := time.Now().Add(7 * 24 * time.Hour).Unix()
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookie,
@@ -46,6 +50,7 @@ func (s *Server) setSessionCookie(w http.ResponseWriter) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
+		Secure:   sessionCookieSecure(r),
 		MaxAge:   7 * 24 * 3600,
 	})
 }
@@ -58,13 +63,15 @@ func (s *Server) checkSessionCookie(r *http.Request) bool {
 	return s.verifySession(c.Value)
 }
 
-func (s *Server) clearSessionCookie(w http.ResponseWriter) {
+func (s *Server) clearSessionCookie(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookie,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   sessionCookieSecure(r),
 	})
 }
 
@@ -85,7 +92,7 @@ func (s *Server) ensureBrowserSession(w http.ResponseWriter, r *http.Request) {
 	if s.lib.Vault.Encrypted() && !s.lib.Vault.Unlocked() {
 		return
 	}
-	s.setSessionCookie(w)
+	s.setSessionCookie(w, r)
 }
 
 func (s *Server) requireUnlockedUI(w http.ResponseWriter, r *http.Request) bool {

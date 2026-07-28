@@ -48,6 +48,9 @@ func NewServe(rt *clictx.Runtime) *cobra.Command {
 
 			srv := server.New(rt.Lib, cfg, token)
 			addr := cfg.Serve.Addr
+			if !config.ServeAddrLoopback(addr) {
+				fmt.Fprintf(os.Stderr, "warning: serving on %s over HTTP; API token and session cookie are not encrypted in transit — use a trusted network\n", addr)
+			}
 			if serveOpen {
 				openBrowser("http://" + addr)
 			}

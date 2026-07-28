@@ -1,0 +1,28 @@
+{
+  "exclude-rules": [
+    {
+      "path": "internal/config/config\\.go",
+      "rules": ["G101"]
+    },
+    {
+      "path": "internal/server/session\\.go",
+      "rules": ["G124"]
+    },
+    {
+      "path": "internal/cli/input/editor\\.go",
+      "rules": ["G204"]
+    },
+    {
+      "path": "internal/cli/commands/open\\.go",
+      "rules": ["G204"]
+    },
+    {
+      "path": "internal/cli/commands/serve\\.go",
+      "rules": ["G204"]
+    },
+    {
+      "path": "internal/capture/capture\\.go",
+      "rules": ["G204"]
+    }
+  ]
+}

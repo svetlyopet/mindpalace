@@ -93,6 +93,7 @@ jobs:
       - name: Run gosec
         run: |
           go run github.com/securego/gosec/v2/cmd/gosec \
+            -conf .gosec.json \
             -fmt sarif -out gosec.sarif ./...
 
       - name: Upload gosec SARIF
