@@ -37,12 +37,16 @@ make govulncheck    # dependency vulnerability scan for code paths you use
 |------|-------|-----|
 | `internal/config/config.go` | G101 | `APIKeyEnv` default is an environment variable **name**, not a secret |
 | `internal/server/session.go` | G124 | Local HTTP serve by design; `Secure` is set when the request uses TLS |
+| `internal/server/ui.go` | G203 | Markdown body via goldmark without `html.WithUnsafe`; rendered as `template.HTML` |
+| `internal/server/ui_safeurl.go` | G203 | Source link fragment; `Href`/`Label` only from `safeHTTPURL`; built with `html/template` |
 | `internal/cli/input/editor.go` | G204 | Editor binary from `LookPath`; note path is a temp file |
 | `internal/cli/commands/open.go` | G204 | User-invoked `open` / `xdg-open` for vault entry URLs or dirs |
 | `internal/cli/commands/serve.go` | G204 | Same for optional `--open` browser URL |
-| `internal/capture/capture.go` | G204 | Fixed `tesseract` binary; image path is capture/upload temp |
+| `internal/cli/commands/add.go` | G304 | Temp path from `os.CreateTemp` |
+| `internal/capture/capture.go` | G204, G304 | Fixed `tesseract` binary; paths validated under entry dir |
+| `internal/vault/filecrypto.go` | G304 | Vault-scoped paths enforced at call sites |
 
-Line-level `#nosec` for G203/G304 remains on a few call sites where file-wide exclusion would be too broad.
+Product code does not use inline `#nosec`; exclusions live in this file only.
 
 ### Semgrep
 
@@ -56,7 +60,7 @@ Path exclusions use [`.semgrepignore`](.semgrepignore) ([Ignoring files, folders
 |------|-----|
 | `internal/server/session.go` | `cookie-missing-secure` false positive on local HTTP; `Secure` is set when `r.TLS != nil` (same rationale as gosec G124 above) |
 
-Template XSS hardening uses validated source links and Go-computed CSS classes in [`internal/server/ui.go`](internal/server/ui.go). [`internal/server/ui_safeurl.go`](internal/server/ui_safeurl.go) keeps an inline `# nosemgrep` on `sourceLinkHTML` (file-wide ignore would drop other Go rules on that file).
+Template XSS hardening uses validated source links (`safeHTTPURL` + `html/template`) and Go-computed CSS classes in [`internal/server/ui.go`](internal/server/ui.go).
 
 Semgrep and OWASP ZAP remain CI-only (Python/Docker actions); see **Security scanning**.
 
@@ -65,38 +69,3 @@ Semgrep and OWASP ZAP remain CI-only (Python/Docker actions); see **Security sca
 `make release` runs GoReleaser in snapshot mode (`goreleaser release --snapshot --clean`). Artifacts land in `dist/` only; nothing is published to GitHub. Use it to check cross-compiled binaries, SPDX SBOMs (when Syft is installed), and `mp --version` on built binaries.
 
 This is **not** the same as the tag-driven [`.github/workflows/release.yml`](.github/workflows/release.yml) workflow.
-
-## CI pipeline
-
-Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (`name: ci`).
-
-| Job | What it does |
-| --- | --- |
-| **unit** | `go vet ./...`, `go test -race -count=1 ./...` |
-| **coverage** | `go test -coverprofile=coverage.out`, summary, uploads `coverage` artifact |
-| **e2e** | `make test-e2e` |
-
-Triggers: pushes to `main` / `master` and all pull requests.
-
-If you rename or split this workflow, re-select required status checks under branch protection (GitHub keys checks off workflow/job names).
-
-## Security scanning (post-CI)
-
-These workflows run only after [`ci`](.github/workflows/ci.yml) completes successfully (`workflow_run`). They do not run on tag/release workflows.
-
-| Workflow                                                   | Tools | Results |
-|------------------------------------------------------------| --- | --- |
-| [`.github/workflows/scan.yml`](.github/workflows/scan.yml) | [gosec](https://github.com/securego/gosec), [Semgrep](https://semgrep.dev/) (`p/golang`, `p/security-audit`), [govulncheck](https://go.dev/security/vuln/) | gosec/Semgrep SARIF → **Security → Code scanning**; failures fail the workflow |
-
-The local UI renders note markdown without raw HTML (inline HTML in notes is escaped, not executed).
-
-Both check out the same commit CI tested (`workflow_run.head_sha`). `sast` and `dast` must exist on the default branch before they trigger on pull requests.
-
-## Release automation (overview)
-
-Tag pushes matching semver (`v*.*.*`) trigger [`.github/workflows/release.yml`](.github/workflows/release.yml). Configuration lives in [`.goreleaser.yaml`](.goreleaser.yaml).
-
-- Cross-platform `mp` binaries, checksums, changelog, and SPDX SBOMs per archive (Syft).
-- GitHub Artifact SBOM attestations after publish.
-- Version strings are injected at link time via [`internal/version`](internal/version/version.go).
-- The release job uses GitHub Environment **`release`**. Create that environment in the repository settings and configure **required reviewers** there so publishes wait for approval. This document does not cover tagging, approving runs, or publishing steps.

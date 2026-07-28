@@ -209,12 +209,12 @@ func copyFile(src, dst string) error {
 	if err := pathUnderBase(entryDir, dst); err != nil {
 		return err
 	}
-	in, err := os.Open(src) // #nosec G304 -- src is user-provided import path
+	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer in.Close()
-	out, err := os.Create(dst) // #nosec G304 -- dst validated under entry dir above
+	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}

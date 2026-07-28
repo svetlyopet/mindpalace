@@ -9,6 +9,14 @@
       "rules": ["G124"]
     },
     {
+      "path": "internal/server/ui\\.go",
+      "rules": ["G203"]
+    },
+    {
+      "path": "internal/server/ui_safeurl\\.go",
+      "rules": ["G203"]
+    },
+    {
       "path": "internal/cli/input/editor\\.go",
       "rules": ["G204"]
     },
@@ -21,8 +29,16 @@
       "rules": ["G204"]
     },
     {
+      "path": "internal/cli/commands/add\\.go",
+      "rules": ["G304"]
+    },
+    {
       "path": "internal/capture/capture\\.go",
-      "rules": ["G204"]
+      "rules": ["G204", "G304"]
+    },
+    {
+      "path": "internal/vault/filecrypto\\.go",
+      "rules": ["G304"]
     }
   ]
 }

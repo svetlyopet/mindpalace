@@ -313,5 +313,5 @@ func noteTitleViaEditor(editor, defaultHint string) (string, error) {
 }
 
 func readEditorTemp(path string) ([]byte, error) {
-	return os.ReadFile(path) // #nosec G304 -- path from os.CreateTemp
+	return os.ReadFile(path)
 }

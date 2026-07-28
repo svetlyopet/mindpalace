@@ -41,11 +41,11 @@ func WriteFileBytes(path string, plain []byte, c *Cipher) error {
 
 // readFileRaw reads bytes at path. Callers must scope path to the vault or entry tree.
 func readFileRaw(path string) ([]byte, error) {
-	return os.ReadFile(path) // #nosec G304 -- vault-scoped paths enforced at call sites
+	return os.ReadFile(path)
 }
 
 func writeFileRaw(path string, data []byte) error {
-	return os.WriteFile(path, data, fsperm.PrivateFileMode) // #nosec G304 -- vault-scoped paths enforced at call sites
+	return os.WriteFile(path, data, fsperm.PrivateFileMode)
 }
 
 // EncryptTree encrypts entry bodies and known asset files under the vault.

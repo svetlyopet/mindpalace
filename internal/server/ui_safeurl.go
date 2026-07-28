@@ -1,14 +1,16 @@
 package server
 
 import (
-	"fmt"
-	"html"
+	"bytes"
 	"html/template"
 	"net/url"
 	"strings"
 
 	"github.com/svetlyopet/mindpalace/internal/search"
 )
+
+var sourceLinkTmpl = template.Must(template.New("sourceLink").Parse(
+	`<a class="source-link" href="{{.Href}}" target="_blank" rel="noopener">{{.Label}}</a>`))
 
 func safeHTTPURL(raw string) (href string, ok bool) {
 	raw = strings.TrimSpace(raw)
@@ -45,13 +47,11 @@ func sourceLinkHTML(href, label string) template.HTML {
 	if href == "" || label == "" {
 		return ""
 	}
-	// nosemgrep: go.lang.security.audit.net.formatted-template-string.formatted-template-string -- href/label validated http(s) and html-escaped
-	s := fmt.Sprintf(
-		`<a class="source-link" href="%s" target="_blank" rel="noopener">%s</a>`,
-		html.EscapeString(href),
-		html.EscapeString(label),
-	)
-	return template.HTML(s)
+	var buf bytes.Buffer
+	if err := sourceLinkTmpl.Execute(&buf, struct{ Href, Label string }{href, label}); err != nil {
+		return ""
+	}
+	return template.HTML(buf.String())
 }
 
 func buildTypeFilterOptions(types []string, selected string) []typeFilterOption {

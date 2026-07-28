@@ -192,8 +192,7 @@ func (s *Server) buildEntryViewerData(e *vault.Entry) (entryViewerData, error) {
 	hasSource := fileExists(filepath.Join(e.Dir, "source.html"))
 	showNote := strings.TrimSpace(e.Body) != ""
 	data := entryViewerData{
-		Entry: e,
-		// #nosec G203 -- markdown rendered without html.WithUnsafe; trusted as formatted note content.
+		Entry:          e,
 		BodyHTML:       template.HTML(bodyHTML),
 		HasSourceHTML:  hasSource,
 		ShowNoteTab:    showNote,
