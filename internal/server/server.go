@@ -38,8 +38,9 @@ func (s *Server) Run(ctx context.Context, addr string) error {
 	s.registerRoutes(mux)
 
 	s.httpServer = &http.Server{
-		Addr:    addr,
-		Handler: mux,
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	stopWatch, err := s.startWatcher(ctx)

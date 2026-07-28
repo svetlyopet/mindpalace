@@ -13,6 +13,8 @@ import (
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/v2/analysis/lang/en"
 	"github.com/blevesearch/bleve/v2/mapping"
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
+	"github.com/svetlyopet/mindpalace/internal/fsutil"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 
 	"github.com/blevesearch/bleve/v2/search/query"
@@ -54,7 +56,7 @@ func Open(vaultRoot string) (*Index, error) {
 		meta:      make(map[string]EntryMeta),
 	}
 
-	if err := os.MkdirAll(filepath.Dir(ix.indexPath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(ix.indexPath), fsperm.DirMode); err != nil {
 		return nil, err
 	}
 	if err := ix.loadMeta(); err != nil {
@@ -295,12 +297,12 @@ func (ix *Index) saveMeta() error {
 	}
 	tmpPath := tmp.Name()
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		os.Remove(tmpPath)
+		_ = fsutil.CloseFile(tmp)
+		fsutil.RemoveBestEffort(tmpPath)
 		return err
 	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmpPath)
+	if err := fsutil.CloseFile(tmp); err != nil {
+		fsutil.RemoveBestEffort(tmpPath)
 		return err
 	}
 	return os.Rename(tmpPath, ix.metaPath)
@@ -319,7 +321,7 @@ func (ix *Index) checkMappingVersion() (bool, error) {
 }
 
 func (ix *Index) writeMappingVersion() error {
-	return os.WriteFile(ix.mappingVersionPath(), []byte(mappingVersion), 0o644)
+	return os.WriteFile(ix.mappingVersionPath(), []byte(mappingVersion), fsperm.PrivateFileMode)
 }
 
 func domainFromSource(source string) string {

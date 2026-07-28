@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
+	"github.com/svetlyopet/mindpalace/internal/fsutil"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 	"gopkg.in/yaml.v3"
 )
@@ -85,7 +87,7 @@ func Save(vaultRoot string, cfg *Config) error {
 	}
 	path := vault.ConfigPath(vaultRoot)
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, fsperm.DirMode); err != nil {
 		return err
 	}
 	data, err := yaml.Marshal(cfg)
@@ -100,12 +102,12 @@ func Save(vaultRoot string, cfg *Config) error {
 	}
 	tmpPath := tmp.Name()
 	if _, err := tmp.Write(payload); err != nil {
-		tmp.Close()
-		os.Remove(tmpPath)
+		_ = fsutil.CloseFile(tmp)
+		fsutil.RemoveBestEffort(tmpPath)
 		return err
 	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmpPath)
+	if err := fsutil.CloseFile(tmp); err != nil {
+		fsutil.RemoveBestEffort(tmpPath)
 		return err
 	}
 	return os.Rename(tmpPath, path)

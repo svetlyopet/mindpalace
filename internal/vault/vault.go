@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
 )
 
 var ErrNotFound = errors.New("entry not found")
@@ -53,7 +55,7 @@ type Vault struct {
 
 func Init(root string) (*Vault, error) {
 	root = filepath.Clean(root)
-	if err := os.MkdirAll(root, 0o755); err != nil {
+	if err := os.MkdirAll(root, fsperm.DirMode); err != nil {
 		return nil, fmt.Errorf("create vault root: %w", err)
 	}
 	return &Vault{root: root}, nil
@@ -143,7 +145,7 @@ func (v *Vault) Create(e *Entry) error {
 	for attempt := 0; attempt < 5; attempt++ {
 		abs := filepath.Join(v.root, rel)
 		if _, err := os.Stat(abs); errors.Is(err, fs.ErrNotExist) {
-			if err := os.MkdirAll(abs, 0o755); err != nil {
+			if err := os.MkdirAll(abs, fsperm.DirMode); err != nil {
 				return err
 			}
 			e.Dir = abs

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/adrg/frontmatter"
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
 	"gopkg.in/yaml.v3"
 )
 
@@ -164,7 +165,7 @@ func WriteEntry(dir string, e *Entry, c *Cipher) error {
 		}
 	}
 	path := filepath.Join(dir, "entry.md")
-	return os.WriteFile(path, out.Bytes(), 0o644)
+	return os.WriteFile(path, out.Bytes(), fsperm.PrivateFileMode)
 }
 
 func asString(v any) string {

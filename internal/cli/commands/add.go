@@ -11,6 +11,7 @@ import (
 	"github.com/svetlyopet/mindpalace/internal/capture"
 	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/cli/input"
+	"github.com/svetlyopet/mindpalace/internal/fsutil"
 	"github.com/svetlyopet/mindpalace/internal/library"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 )
@@ -224,8 +225,8 @@ func noteBody(rt *clictx.Runtime) (string, bool, error) {
 		return "", false, err
 	}
 	path := f.Name()
-	f.Close()
-	defer os.Remove(path)
+	_ = fsutil.CloseFile(f)
+	defer fsutil.RemoveBestEffort(path)
 	if err := input.RunEditor(ed, path); err != nil {
 		return "", false, err
 	}
@@ -262,12 +263,12 @@ func noteTagsViaEditor(editor string, initial, suggested []string) ([]string, er
 		b.WriteByte('\n')
 	}
 	if _, err := f.WriteString(b.String()); err != nil {
-		f.Close()
-		os.Remove(path)
+		_ = fsutil.CloseFile(f)
+		fsutil.RemoveBestEffort(path)
 		return nil, err
 	}
-	f.Close()
-	defer os.Remove(path)
+	_ = fsutil.CloseFile(f)
+	defer fsutil.RemoveBestEffort(path)
 	if err := input.RunEditor(editor, path); err != nil {
 		return nil, err
 	}
@@ -291,12 +292,12 @@ func noteTitleViaEditor(editor, defaultHint string) (string, error) {
 		b.WriteByte('\n')
 	}
 	if _, err := f.WriteString(b.String()); err != nil {
-		f.Close()
-		os.Remove(path)
+		_ = fsutil.CloseFile(f)
+		fsutil.RemoveBestEffort(path)
 		return "", err
 	}
-	f.Close()
-	defer os.Remove(path)
+	_ = fsutil.CloseFile(f)
+	defer fsutil.RemoveBestEffort(path)
 	if err := input.RunEditor(editor, path); err != nil {
 		return "", err
 	}

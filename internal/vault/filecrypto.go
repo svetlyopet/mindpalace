@@ -3,6 +3,8 @@ package vault
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
 )
 
 // ReadFileBytes reads a file, decrypting when the vault cipher is set and data is encrypted.
@@ -31,10 +33,10 @@ func WriteFileBytes(path string, plain []byte, c *Cipher) error {
 		}
 	}
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, fsperm.DirMode); err != nil {
 		return err
 	}
-	return os.WriteFile(path, out, 0o644)
+	return os.WriteFile(path, out, fsperm.PrivateFileMode)
 }
 
 // EncryptTree encrypts entry bodies and known asset files under the vault.
@@ -143,5 +145,5 @@ func decryptFileInPlace(path string, c *Cipher) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, plain, 0o644)
+	return os.WriteFile(path, plain, fsperm.PrivateFileMode)
 }

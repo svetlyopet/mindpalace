@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/svetlyopet/mindpalace/internal/fsutil"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 )
 
@@ -81,12 +82,12 @@ func writeUploadTemp(filename string, data []byte) (path string, cleanup func(),
 	}
 	path = f.Name()
 	if _, err := f.Write(data); err != nil {
-		f.Close()
-		os.Remove(path)
+		_ = fsutil.CloseFile(f)
+		fsutil.RemoveBestEffort(path)
 		return "", nil, err
 	}
-	if err := f.Close(); err != nil {
-		os.Remove(path)
+	if err := fsutil.CloseFile(f); err != nil {
+		fsutil.RemoveBestEffort(path)
 		return "", nil, err
 	}
 	return path, func() { _ = os.Remove(path) }, nil

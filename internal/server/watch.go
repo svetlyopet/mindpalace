@@ -15,7 +15,7 @@ func (s *Server) startWatcher(ctx context.Context) (func(), error) {
 	}
 	root := s.lib.Vault.Root()
 	if err := w.Add(root); err != nil {
-		w.Close()
+		_ = w.Close()
 		return nil, err
 	}
 

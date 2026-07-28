@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 	"gopkg.in/yaml.v3"
 )
@@ -107,7 +108,7 @@ func ResolveVaultRoot(flagValue string) (string, error) {
 func WriteDefault(vaultRoot string) error {
 	path := vault.ConfigPath(vaultRoot)
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, fsperm.DirMode); err != nil {
 		return err
 	}
 	cfg := Default()
@@ -116,7 +117,7 @@ func WriteDefault(vaultRoot string) error {
 		return err
 	}
 	header := "# Mindpalace vault config\n"
-	return os.WriteFile(path, append([]byte(header), data...), 0o644)
+	return os.WriteFile(path, append([]byte(header), data...), fsperm.PrivateFileMode)
 }
 
 // EditorCommand returns configured editor, $EDITOR, or vim.
