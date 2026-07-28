@@ -15,6 +15,7 @@ import (
 	"unicode"
 
 	"github.com/svetlyopet/mindpalace/internal/config"
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 )
 
@@ -134,7 +135,7 @@ func (c *Capturer) File(ctx context.Context, path string, opts Options) (*Result
 			return nil, err
 		}
 		if res.ExtractedText != "" {
-			_ = os.WriteFile(filepath.Join(res.Entry.Dir, "extracted.txt"), []byte(res.ExtractedText), 0o644)
+			_ = os.WriteFile(filepath.Join(res.Entry.Dir, "extracted.txt"), []byte(res.ExtractedText), fsperm.PrivateFileMode)
 		}
 	}
 	return res, nil

@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
 	"golang.org/x/net/html"
 )
 
@@ -50,14 +51,14 @@ func bundlePage(ctx context.Context, client *http.Client, pageURL *url.URL, rawH
 	if err != nil {
 		warnings = append(warnings, "html bundle: parse failed after sanitize: "+err.Error())
 		fallback := minimalSafeBundleHTML("Could not parse saved page HTML.")
-		if werr := os.WriteFile(filepath.Join(entryDir, sourceHTMLName), fallback, 0o644); werr != nil {
+		if werr := os.WriteFile(filepath.Join(entryDir, sourceHTMLName), fallback, fsperm.PrivateFileMode); werr != nil {
 			warnings = append(warnings, "html bundle: write source.html: "+werr.Error())
 		}
 		return warnings
 	}
 
 	assetsDir := filepath.Join(entryDir, assetsDirName)
-	if err := os.MkdirAll(assetsDir, 0o755); err != nil {
+	if err := os.MkdirAll(assetsDir, fsperm.DirMode); err != nil {
 		warnings = append(warnings, "html bundle: mkdir assets: "+err.Error())
 		return warnings
 	}
@@ -120,7 +121,7 @@ func bundlePage(ctx context.Context, client *http.Client, pageURL *url.URL, rawH
 			}
 			name := assetFilename(absKey, ext)
 			dest := filepath.Join(assetsDir, name)
-			if err := os.WriteFile(dest, data, 0o644); err != nil {
+			if err := os.WriteFile(dest, data, fsperm.PrivateFileMode); err != nil {
 				if r.allowCrossOrigin {
 					removeNode(r.node)
 				}
@@ -137,12 +138,12 @@ func bundlePage(ctx context.Context, client *http.Client, pageURL *url.URL, rawH
 	var buf bytes.Buffer
 	if err := html.Render(&buf, doc); err != nil {
 		warnings = append(warnings, "html bundle: render failed: "+err.Error())
-		if werr := os.WriteFile(filepath.Join(entryDir, sourceHTMLName), rawHTML, 0o644); werr != nil {
+		if werr := os.WriteFile(filepath.Join(entryDir, sourceHTMLName), rawHTML, fsperm.PrivateFileMode); werr != nil {
 			warnings = append(warnings, "html bundle: write source.html: "+werr.Error())
 		}
 		return warnings
 	}
-	if err := os.WriteFile(filepath.Join(entryDir, sourceHTMLName), buf.Bytes(), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(entryDir, sourceHTMLName), buf.Bytes(), fsperm.PrivateFileMode); err != nil {
 		warnings = append(warnings, "html bundle: write source.html: "+err.Error())
 	}
 	return warnings

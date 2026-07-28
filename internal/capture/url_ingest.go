@@ -12,6 +12,7 @@ import (
 
 	readability "codeberg.org/readeck/go-readability/v2"
 	htmltomd "github.com/JohannesKaufmann/html-to-markdown/v2"
+	"github.com/svetlyopet/mindpalace/internal/fsperm"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 )
 
@@ -126,7 +127,7 @@ func (c *Capturer) ingestHTML(ctx context.Context, link string, pageURL *url.URL
 	if err := c.vault.Create(res.Entry); err != nil {
 		return nil, err
 	}
-	if err := os.WriteFile(filepath.Join(res.Entry.Dir, "extracted.txt"), []byte(plain), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(res.Entry.Dir, "extracted.txt"), []byte(plain), fsperm.PrivateFileMode); err != nil {
 		return nil, err
 	}
 	if opts.FullHTML || c.cfg.FullHTML {
