@@ -21,6 +21,11 @@ if ! command -v gitleaks >/dev/null 2>&1; then
   echo "         https://github.com/gitleaks/gitleaks" >&2
 fi
 
+if ! command -v semgrep >/dev/null 2>&1; then
+  echo "warning: semgrep not found on PATH; pre-commit semgrep scan will fail until installed" >&2
+  echo "         pip install semgrep  (or see https://semgrep.dev/docs/getting-started/)" >&2
+fi
+
 echo "Git hooks enabled (core.hooksPath=.githooks)"
 for hook in .githooks/*; do
   [ -f "$hook" ] || continue

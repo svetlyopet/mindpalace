@@ -8,6 +8,7 @@ GOSEC_ARGS   ?= -conf .gosec.json
 GOVULNCHECK   ?= golang.org/x/vuln/cmd/govulncheck
 SEMGREP       ?= semgrep
 SEMGREP_CONFIGS ?= --config p/golang --config p/security-audit
+SEMGREP_FLAGS ?=
 
 .PHONY: help setup-hooks fmt lint out build test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck semgrep
 
@@ -77,7 +78,7 @@ govulncheck:
 	$(GO) run $(GOVULNCHECK) ./...
 
 semgrep:
-	$(SEMGREP) scan $(SEMGREP_CONFIGS) --error .
+	$(SEMGREP) scan $(SEMGREP_CONFIGS) $(SEMGREP_FLAGS) --error .
 
 clean:
 	rm -f $(BIN)

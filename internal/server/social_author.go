@@ -2,17 +2,20 @@ package server
 
 import (
 	"fmt"
+	"html/template"
 	"strings"
 
 	"github.com/svetlyopet/mindpalace/internal/vault"
 )
 
 type socialAuthorView struct {
-	DisplayName string
-	Handle      string
-	ProfileURL  string
-	AvatarURL   string
-	Platform    string
+	DisplayName     string
+	Handle          string
+	AvatarURL       string
+	Platform        string
+	NameLinkHTML    template.HTML
+	HandleLinkHTML  template.HTML
+	ProfileLinkHTML template.HTML
 }
 
 func socialAuthorFromEntry(e *vault.Entry) *socialAuthorView {
@@ -40,11 +43,20 @@ func socialAuthorFromEntry(e *vault.Entry) *socialAuthorView {
 	view := &socialAuthorView{
 		DisplayName: display,
 		Handle:      handle,
-		ProfileURL:  profile,
 		Platform:    platform,
 	}
 	if avatar != "" {
 		view.AvatarURL = "/ui/entry/" + e.ID + "/file/" + strings.TrimPrefix(avatar, "/")
+	}
+	if href, ok := safeHTTPURL(profile); ok {
+		if display != "" {
+			view.NameLinkHTML = anchorLinkHTML("entry-author-name", href, display, "noopener noreferrer")
+		}
+		if handle != "" {
+			view.HandleLinkHTML = anchorLinkHTML("entry-author-handle", href, "@"+handle, "noopener noreferrer")
+		} else if platform == "facebook" {
+			view.ProfileLinkHTML = anchorLinkHTML("entry-author-handle", href, "View account", "noopener noreferrer")
+		}
 	}
 	return view
 }

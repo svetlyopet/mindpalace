@@ -9,8 +9,8 @@ import (
 	"github.com/svetlyopet/mindpalace/internal/search"
 )
 
-var sourceLinkTmpl = template.Must(template.New("sourceLink").Parse(
-	`<a class="source-link" href="{{.Href}}" target="_blank" rel="noopener">{{.Label}}</a>`))
+var anchorLinkTmpl = template.Must(template.New("anchorLink").Parse(
+	`<a class="{{.Class}}" href="{{.Href}}" target="_blank" rel="{{.Rel}}">{{.Label}}</a>`))
 
 func safeHTTPURL(raw string) (href string, ok bool) {
 	raw = strings.TrimSpace(raw)
@@ -43,15 +43,23 @@ func tabBtnClass(active bool) string {
 	return "tab-btn"
 }
 
-func sourceLinkHTML(href, label string) template.HTML {
-	if href == "" || label == "" {
+func anchorLinkHTML(class, href, label, rel string) template.HTML {
+	if class == "" || href == "" || label == "" {
 		return ""
 	}
+	if rel == "" {
+		rel = "noopener noreferrer"
+	}
 	var buf bytes.Buffer
-	if err := sourceLinkTmpl.Execute(&buf, struct{ Href, Label string }{href, label}); err != nil {
+	data := struct{ Class, Href, Label, Rel string }{class, href, label, rel}
+	if err := anchorLinkTmpl.Execute(&buf, data); err != nil {
 		return ""
 	}
 	return template.HTML(buf.String())
+}
+
+func sourceLinkHTML(href, label string) template.HTML {
+	return anchorLinkHTML("source-link", href, label, "noopener")
 }
 
 func buildTypeFilterOptions(types []string, selected string) []typeFilterOption {

@@ -23,6 +23,11 @@ function make-lint() {
   fi
 }
 
+function semgrep-scan() {
+  echo 'Running `make semgrep`.'
+  make semgrep SEMGREP_FLAGS=--verbose
+}
+
 function secrets-scan() {
   echo 'Running secrets scan with gitleaks.'
   gitleaks git --verbose --pre-commit
@@ -40,4 +45,5 @@ trap 'failed' ERR
 
 make-fmt
 make-lint
+semgrep-scan
 secrets-scan

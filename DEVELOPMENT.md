@@ -7,6 +7,7 @@ Contributor documentation for [Mindpalace](README.md). End-user setup and usage 
 - Go version listed in [`go.mod`](go.mod) (1.25 or newer today).
 - [`make`](Makefile) for common tasks.
 - Optional: [Syft](https://github.com/anchore/syft) on `PATH` when running `make release` (SBOM generation uses the same tool as CI).
+- [gitleaks](https://github.com/gitleaks/gitleaks) and [semgrep](https://semgrep.dev/) on `PATH` when using `make setup-hooks` (pre-commit runs both on every commit).
 
 ## Local build and test
 
@@ -60,9 +61,9 @@ Path exclusions use [`.semgrepignore`](.semgrepignore) ([Ignoring files, folders
 |------|-----|
 | `internal/server/session.go` | `cookie-missing-secure` false positive on local HTTP; `Secure` is set when `r.TLS != nil` (same rationale as gosec G124 above) |
 
-Template XSS hardening uses validated source links (`safeHTTPURL` + `html/template`) and Go-computed CSS classes in [`internal/server/ui.go`](internal/server/ui.go).
+Template XSS hardening uses validated source links and social author profile links (`safeHTTPURL` + `html/template` anchor builders in [`internal/server/ui_safeurl.go`](internal/server/ui_safeurl.go)) and Go-computed CSS classes in [`internal/server/ui.go`](internal/server/ui.go).
 
-Semgrep and OWASP ZAP remain CI-only (Python/Docker actions); see **Security scanning**.
+Semgrep also runs locally via the pre-commit hook (`--verbose`); OWASP ZAP remains CI-only (Docker action). See **Security scanning**.
 
 ## Local release snapshot
 

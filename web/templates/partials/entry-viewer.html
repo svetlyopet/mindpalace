@@ -7,15 +7,15 @@
       <div class="entry-author">
         {{if .SocialAuthor.AvatarURL}}<img class="entry-author-avatar" src="{{.SocialAuthor.AvatarURL}}" alt="">{{end}}
         <div class="entry-author-meta">
-          {{if .SocialAuthor.ProfileURL}}
-          <a class="entry-author-name" href="{{.SocialAuthor.ProfileURL}}" rel="noopener noreferrer" target="_blank">{{.SocialAuthor.DisplayName}}</a>
+          {{if .SocialAuthor.NameLinkHTML}}
+          {{.SocialAuthor.NameLinkHTML}}
           {{else if .SocialAuthor.DisplayName}}
           <span class="entry-author-name">{{.SocialAuthor.DisplayName}}</span>
           {{end}}
-          {{if .SocialAuthor.Handle}}
-          <a class="entry-author-handle" href="{{.SocialAuthor.ProfileURL}}" rel="noopener noreferrer" target="_blank">@{{.SocialAuthor.Handle}}</a>
-          {{else if and .SocialAuthor.ProfileURL (eq .SocialAuthor.Platform "facebook")}}
-          <a class="entry-author-handle" href="{{.SocialAuthor.ProfileURL}}" rel="noopener noreferrer" target="_blank">View account</a>
+          {{if .SocialAuthor.HandleLinkHTML}}
+          {{.SocialAuthor.HandleLinkHTML}}
+          {{else if .SocialAuthor.ProfileLinkHTML}}
+          {{.SocialAuthor.ProfileLinkHTML}}
           {{end}}
         </div>
       </div>

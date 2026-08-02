@@ -36,3 +36,28 @@ func TestNavLinkClass(t *testing.T) {
 		t.Fatal("expected inactive tags class")
 	}
 }
+
+func TestAnchorLinkHTML(t *testing.T) {
+	if got := anchorLinkHTML("", "https://example.com", "label", ""); got != "" {
+		t.Fatalf("expected empty for blank class, got %q", got)
+	}
+	if got := anchorLinkHTML("entry-author-name", "", "label", ""); got != "" {
+		t.Fatalf("expected empty for blank href, got %q", got)
+	}
+	if got := anchorLinkHTML("entry-author-name", "https://example.com", "", ""); got != "" {
+		t.Fatalf("expected empty for blank label, got %q", got)
+	}
+	got := string(anchorLinkHTML("entry-author-name", "https://example.com", "Display", "noopener noreferrer"))
+	want := `<a class="entry-author-name" href="https://example.com" target="_blank" rel="noopener noreferrer">Display</a>`
+	if got != want {
+		t.Fatalf("anchorLinkHTML = %q, want %q", got, want)
+	}
+}
+
+func TestSourceLinkHTML(t *testing.T) {
+	got := string(sourceLinkHTML("https://example.com", "https://example.com"))
+	want := `<a class="source-link" href="https://example.com" target="_blank" rel="noopener">https://example.com</a>`
+	if got != want {
+		t.Fatalf("sourceLinkHTML = %q, want %q", got, want)
+	}
+}
