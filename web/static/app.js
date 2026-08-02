@@ -16,6 +16,7 @@
   const noteStatusEl = document.getElementById('note-status');
 
   const urlModal = document.getElementById('url-modal');
+  const socialModal = document.getElementById('social-modal');
   const fileModal = document.getElementById('file-modal');
   const sizeKey = 'mp.noteModalSize';
   const minW = 320;
@@ -73,6 +74,7 @@
 
   const noteTagState = tags.createTagPromptState();
   const urlTagState = tags.createTagPromptState();
+  const socialTagState = tags.createTagPromptState();
   const fileTagState = tags.createTagPromptState();
 
   function resetNoteTagPrompt() {
@@ -100,6 +102,7 @@
 
   function openNoteModal() {
     closeUrlModal();
+    closeSocialModal();
     closeFileModal();
     modal.hidden = false;
     toggleBtn.setAttribute('aria-expanded', 'true');
@@ -123,6 +126,7 @@
     if (e.key === 'Escape') {
       if (!modal.hidden) { e.preventDefault(); closeNoteModal(); return; }
       if (!urlModal.hidden) { e.preventDefault(); closeUrlModal(); return; }
+      if (!socialModal.hidden) { e.preventDefault(); closeSocialModal(); return; }
       if (!fileModal.hidden) { e.preventDefault(); closeFileModal(); return; }
     }
   });
@@ -248,6 +252,7 @@
   const urlTitle = document.getElementById('url-title');
   const urlFull = document.getElementById('url-full');
   const urlTags = document.getElementById('url-tags');
+  const urlThoughts = document.getElementById('url-thoughts');
   const urlSuggestions = document.getElementById('url-tag-suggestions');
   const urlStatus = document.getElementById('url-status');
 
@@ -264,6 +269,7 @@
 
   function openUrlModal() {
     closeNoteModal();
+    closeSocialModal();
     closeFileModal();
     urlModal.hidden = false;
     urlToggle.setAttribute('aria-expanded', 'true');
@@ -306,7 +312,7 @@
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kind: 'url', url: link, full: full, title: title })
+            body: JSON.stringify({ kind: 'url', url: link, full: full, title: title, thoughts: urlThoughts.value.trim() })
           });
         },
         capture: function (tagList) {
@@ -314,7 +320,7 @@
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kind: 'url', url: link, full: full, title: title, tags: tagList })
+            body: JSON.stringify({ kind: 'url', url: link, full: full, title: title, tags: tagList, thoughts: urlThoughts.value.trim() })
           }).then(function (r) {
             return parseCaptureResponse(r, urlStatus, 'Saved.');
           });
@@ -324,6 +330,7 @@
           urlTitle.value = '';
           urlFull.checked = false;
           urlTags.value = '';
+          urlThoughts.value = '';
           resetUrlTagPrompt();
           onCaptureSuccess(entryId, closeUrlModal);
         }
@@ -355,11 +362,125 @@
     runSave();
   });
 
+  const socialToggle = document.getElementById('social-panel-toggle');
+  const socialBackdrop = document.getElementById('social-modal-backdrop');
+  const socialInput = document.getElementById('social-input');
+  const socialTitle = document.getElementById('social-title');
+  const socialTags = document.getElementById('social-tags');
+  const socialThoughts = document.getElementById('social-thoughts');
+  const socialSuggestions = document.getElementById('social-tag-suggestions');
+  const socialStatus = document.getElementById('social-status');
+
+  function resetSocialTagPrompt() {
+    tags.resetTagPromptState(socialTagState, socialSuggestions);
+  }
+
+  function closeSocialModal() {
+    socialModal.hidden = true;
+    socialToggle.setAttribute('aria-expanded', 'false');
+    resetSocialTagPrompt();
+    socialStatus.textContent = '';
+  }
+
+  function openSocialModal() {
+    closeNoteModal();
+    closeUrlModal();
+    closeFileModal();
+    socialModal.hidden = false;
+    socialToggle.setAttribute('aria-expanded', 'true');
+    socialTitle.focus();
+  }
+
+  socialToggle.addEventListener('click', function () {
+    if (socialModal.hidden) openSocialModal();
+    else closeSocialModal();
+  });
+  socialBackdrop.addEventListener('click', closeSocialModal);
+
+  socialInput.addEventListener('input', function () {
+    if (socialInput.value.trim() !== socialTagState.key) resetSocialTagPrompt();
+  });
+
+  document.getElementById('social-save').addEventListener('click', function () {
+    const link = socialInput.value.trim();
+    if (!link) return;
+    let title = socialTitle.value.trim();
+
+    function runSave() {
+      title = socialTitle.value.trim();
+      if (!title) {
+        socialStatus.textContent = 'Title is required.';
+        socialTitle.focus();
+        return;
+      }
+      const promptKey = link + '|' + title;
+      tags.runTagPromptSave(socialTagState, {
+        tagsInput: socialTags,
+        suggestionsEl: socialSuggestions,
+        statusEl: socialStatus,
+        previewLoadingText: 'Fetching post…',
+        loadingText: 'Saving social post…',
+        getPromptKey: function () { return promptKey; },
+        fetchPreview: function () {
+          return fetch('/api/capture/preview', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ kind: 'social', url: link, title: title, thoughts: socialThoughts.value.trim() })
+          });
+        },
+        capture: function (tagList) {
+          return fetch('/api/capture', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ kind: 'social', url: link, title: title, tags: tagList, thoughts: socialThoughts.value.trim() })
+          }).then(function (r) {
+            return parseCaptureResponse(r, socialStatus, 'Saved.');
+          });
+        },
+        onSuccess: function (entryId) {
+          socialInput.value = '';
+          socialTitle.value = '';
+          socialTags.value = '';
+          socialThoughts.value = '';
+          resetSocialTagPrompt();
+          onCaptureSuccess(entryId, closeSocialModal);
+        }
+      });
+    }
+
+    if (!title) {
+      socialStatus.textContent = 'Fetching post…';
+      fetch('/api/capture/preview', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'social', url: link })
+      }).then(function (r) {
+        if (!r.ok) {
+          return r.text().then(function (t) { socialStatus.textContent = t; });
+        }
+        return r.json();
+      }).then(function (data) {
+        if (!data) return;
+        if (data.title) socialTitle.value = data.title;
+        socialStatus.textContent = 'Confirm title and save again.';
+        socialTitle.focus();
+      }).catch(function () {
+        socialStatus.textContent = 'Could not load post preview.';
+      });
+      return;
+    }
+    runSave();
+  });
+
   const fileToggle = document.getElementById('file-panel-toggle');
   const fileBackdrop = document.getElementById('file-modal-backdrop');
   const fileInput = document.getElementById('file-input');
   const fileTitle = document.getElementById('file-title');
   const fileTags = document.getElementById('file-tags');
+  const fileThoughts = document.getElementById('file-thoughts');
   const fileSuggestions = document.getElementById('file-tag-suggestions');
   const fileStatus = document.getElementById('file-status');
   const fileNameHint = document.getElementById('file-name-hint');
@@ -378,6 +499,7 @@
   function openFileModal() {
     closeNoteModal();
     closeUrlModal();
+    closeSocialModal();
     fileModal.hidden = false;
     fileToggle.setAttribute('aria-expanded', 'true');
     fileTitle.focus();
@@ -416,6 +538,7 @@
         fd.append('file', f);
         fd.append('title', title);
         fd.append('tags', JSON.stringify(tagList));
+        fd.append('thoughts', fileThoughts.value.trim());
         return fetch('/api/capture/upload', {
           method: 'POST',
           credentials: 'same-origin',
@@ -449,6 +572,7 @@
           fileInput.value = '';
           fileTitle.value = '';
           fileTags.value = '';
+          fileThoughts.value = '';
           fileNameHint.textContent = '';
           resetFileTagPrompt();
           onCaptureSuccess(entryId, closeFileModal);

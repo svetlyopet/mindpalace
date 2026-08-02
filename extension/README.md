@@ -26,11 +26,21 @@ Save the current browser tab to your local Mindpalace vault via `mp serve`.
 
 ## Use
 
+### Save page (toolbar icon)
+
 1. Open a normal **http** or **https** page (not `chrome://`, the Web Store, or other restricted URLs).
 2. Click the Mindpalace toolbar icon.
 3. Edit the title or tags if you want. Use **Save full HTML bundle** to include the full page archive for this save (initial state follows the Options default).
 4. Click **Save**. Full-bundle saves can take longer while the server fetches linked stylesheets.
 5. Optionally click **Open Mindpalace** in the popup to view the library.
+
+### Save as social post (page context menu)
+
+1. Open a public **X** or **Facebook** post in the browser.
+2. Right-click the page and choose **Save as social post to Mindpalace**.
+3. Edit the title or tags in the popup, then click **Save**.
+
+This uses oEmbed to capture post text and media (no full HTML bundle). For other URLs, use the toolbar icon or the web UI **Add link** action instead.
 
 ## Troubleshooting
 
@@ -47,7 +57,7 @@ The extension talks to localhost only (`host_permissions` for `127.0.0.1` and `l
 ## Files
 
 - `manifest.json` — MV3 manifest
-- `background.js` — capture flow (page HTML → preview API → popup)
+- `background.js` — capture flow (page HTML or social oEmbed → preview API → popup)
 - `capture.html` / `capture.js` — tag entry and save
 - `options.html` / `options.js` — server URL and token
 - `icons/` — toolbar icons

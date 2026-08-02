@@ -23,6 +23,7 @@
       <div class="top-right capture-actions">
         <button type="button" class="btn-add-action" id="note-panel-toggle" aria-expanded="false" aria-controls="note-modal">Add note</button>
         <button type="button" class="btn-add-action" id="url-panel-toggle" aria-expanded="false" aria-controls="url-modal">Add link</button>
+        <button type="button" class="btn-add-action" id="social-panel-toggle" aria-expanded="false" aria-controls="social-modal">Add social</button>
         <button type="button" class="btn-add-action" id="file-panel-toggle" aria-expanded="false" aria-controls="file-modal">Import file</button>
       </div>
     </header>
@@ -86,9 +87,37 @@
         <label class="capture-checkbox">
           <input type="checkbox" id="url-full"> Save full HTML bundle
         </label>
+        <label class="note-tags-label">Thoughts (optional)
+          <textarea id="url-thoughts" class="capture-field capture-thoughts" rows="4" placeholder="Why you saved this…"></textarea>
+        </label>
         <div class="note-panel-actions">
           <button type="button" class="btn-primary" id="url-save">Save link</button>
           <p class="msg" id="url-status"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note-modal" id="social-modal" hidden>
+    <div class="note-modal-backdrop" id="social-modal-backdrop"></div>
+    <div class="capture-panel" role="dialog" aria-labelledby="social-modal-title">
+      <div class="note-panel-inner">
+        <h2 id="social-modal-title">Add social</h2>
+        <label class="note-tags-label">Title
+          <input type="text" class="capture-field" id="social-title" autocomplete="off" required>
+        </label>
+        <label class="note-tags-label">Tags
+          <input type="text" class="note-tags" id="social-tags" placeholder="social, x" autocomplete="off">
+        </label>
+        <div class="tag-suggestions" id="social-tag-suggestions" hidden></div>
+        <label class="note-tags-label">Post URL
+          <input type="url" class="capture-field" id="social-input" placeholder="https://x.com/… or https://facebook.com/…" autocomplete="off">
+        </label>
+        <label class="note-tags-label">Thoughts (optional)
+          <textarea id="social-thoughts" class="capture-field capture-thoughts" rows="4" placeholder="Why you saved this…"></textarea>
+        </label>
+        <div class="note-panel-actions">
+          <button type="button" class="btn-primary" id="social-save">Save social</button>
+          <p class="msg" id="social-status"></p>
         </div>
       </div>
     </div>
@@ -109,6 +138,9 @@
           <input type="file" class="capture-field" id="file-input">
         </label>
         <p class="field-hint" id="file-name-hint"></p>
+        <label class="note-tags-label">Thoughts (optional)
+          <textarea id="file-thoughts" class="capture-field capture-thoughts" rows="4" placeholder="Why you saved this…"></textarea>
+        </label>
         <div class="note-panel-actions">
           <button type="button" class="btn-primary" id="file-save">Import</button>
           <p class="msg" id="file-status"></p>

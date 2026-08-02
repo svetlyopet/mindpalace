@@ -55,10 +55,13 @@ If search feels stale or you removed `index/`, run `mp reindex` to rebuild deriv
 ```bash
 mp add note -m "Body text" --title "Title" --tags tag1 --tags tag2
 mp add url https://example.com/article --title "Article title" --tags web
+mp add social https://x.com/user/status/123 --title "Post title" --tags social
 mp add file ./document.pdf --title "Document" --tags docs
 ```
 
 For notes, omit `-m` and pipe text on stdin only with `--title` and `--tags`, or run `mp add note` on a TTY to use editors for body, tags, and title. Entry types include `article`, `note`, `social`, `screenshot`, and `snippet` (see `--type` on `mp add`).
+
+**Social posts:** use `mp add social` (or the web UI **Add social** button, or the extension **Save as social post** context menu) for public X or Facebook post URLs. **Add link** / `mp add url` works for any URL and may auto-detect social hosts with a Readability fallback.
 
 ### Find entries
 
@@ -130,6 +133,46 @@ For scripts and automation when the vault is encrypted, set `MINDPALACE_PASSWORD
 
 Save the current Chrome tab into your vault while `mp serve` is running. Install and configure the unpacked extension from [extension/README.md](extension/README.md) (server URL, API token from `config.yaml`, vault unlocked if encrypted).
 
+- **Toolbar icon** — save the current page (optional full HTML bundle).
+- **Right-click page → Save as social post to Mindpalace** — oEmbed capture for public X or Facebook posts on the open tab.
+- **Web UI Add social** — same oEmbed path when `mp serve` is running.
+
+Public **X** and **Facebook** post URLs use oEmbed when `capture.social_oembed` is enabled (default): post text is stored as the entry body, images are saved under the entry's `assets/` folder, and videos are stored as a poster image (when available) plus a link to the original. **Add link** / the toolbar save may auto-detect social URLs with a Readability fallback; **Add social** / the context menu requires a supported post URL and uses oEmbed only.
+
+Social entries also store author metadata in entry frontmatter:
+
+- **X:** display name, `@handle`, profile URL, and a downloaded profile photo (when available)
+- **Facebook:** display name, account link, and profile photo (when available)
+
+Example frontmatter:
+
+```yaml
+type: social
+platform: x
+post_id: "2083588839524700409"
+author_name: mRr3b00t
+author_url: https://x.com/UK_Daniel_Card
+author:
+  display_name: mRr3b00t
+  handle: UK_Daniel_Card
+  profile_url: https://x.com/UK_Daniel_Card
+  avatar: assets/author-a1b2c3d4.jpg
+```
+
+The web UI entry viewer shows the author card when this metadata is present. API responses include an `extra` field with the same data.
+
+### Thoughts (optional commentary)
+
+When capturing links, social posts, or imported files (not notes), you can add personal commentary with `--thoughts` on the CLI, the **Thoughts** field in the web UI capture modals, or the `thoughts` field in API/extension capture requests. Non-empty thoughts are appended to the entry body as a `## Thoughts` markdown section and included in search indexing.
+
+```bash
+mp add url "https://example.com" --title "Article" --tags read --thoughts "Read before the meeting"
+mp add social "https://x.com/u/status/1" --title "Post" --tags social --thoughts "Key quote inside"
+mp add file ./notes.txt --title "Snippet" --tags ref --thoughts "Related to project X"
+```
+
+Notes use the entry body for your writing; `--thoughts` is ignored for `mp add note`.
+
 ## Configuration
 
 Settings live in `config.yaml` at the vault root (or legacy `~/.mindpalace/.mindpalace/config.yaml` on older vaults).
@@ -141,6 +184,7 @@ Common keys:
 - **serve.token** — bearer token for the API and Chrome extension.
 - **capture.auto_tag** — suggest tags on capture when enabled.
 - **capture.full_html** — default for saving full page HTML on URL capture.
+- **capture.social_oembed** — when enabled (default), public X and Facebook post URLs are captured via oEmbed with post text and archived images; videos are stored as a poster image plus link to the original.
 
 LLM-related settings exist for future features; the default backend is `none`.
 

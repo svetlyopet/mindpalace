@@ -171,12 +171,13 @@ func safeEntryPath(entryDir, rel string) (clean, abs string, err error) {
 }
 
 // CaptureOptionsFromFields builds capture.Options shared by CLI and HTTP adapters.
-func CaptureOptionsFromFields(title string, tags []string, tagsExplicit bool, typ vault.Type, fullHTML bool) capture.Options {
+func CaptureOptionsFromFields(title string, tags []string, tagsExplicit bool, typ vault.Type, fullHTML bool, thoughts string) capture.Options {
 	opts := capture.Options{
 		Title:        title,
 		Tags:         tags,
 		TagsExplicit: tagsExplicit,
 		FullHTML:     fullHTML,
+		Thoughts:     strings.TrimSpace(thoughts),
 	}
 	if typ != "" {
 		opts.Type = typ

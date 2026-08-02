@@ -12,6 +12,7 @@ import (
 
 	readability "codeberg.org/readeck/go-readability/v2"
 	htmltomd "github.com/JohannesKaufmann/html-to-markdown/v2"
+	"github.com/svetlyopet/mindpalace/internal/capture/social"
 	"github.com/svetlyopet/mindpalace/internal/fsperm"
 	"github.com/svetlyopet/mindpalace/internal/vault"
 )
@@ -50,29 +51,6 @@ func (c *Capturer) URLFromHTML(ctx context.Context, link string, html []byte, op
 	return c.ingestHTML(ctx, link, pageURL, html, opts)
 }
 
-func buildEntryFromHTML(link string, pageURL *url.URL, rawHTML []byte, opts Options) (*vault.Entry, string, error) {
-	title := strings.TrimSpace(opts.Title)
-	if err := validateTitle(title); err != nil {
-		return nil, "", err
-	}
-	return entryFromHTML(link, pageURL, rawHTML, title, opts)
-}
-
-func previewEntryFromHTML(link string, pageURL *url.URL, rawHTML []byte, opts Options) (*vault.Entry, string, error) {
-	title := strings.TrimSpace(opts.Title)
-	if title == "" {
-		article, err := readability.FromReader(strings.NewReader(string(rawHTML)), pageURL)
-		if err != nil {
-			return nil, "", fmt.Errorf("readability: %w", err)
-		}
-		title = strings.TrimSpace(article.Title())
-		if title == "" {
-			title = link
-		}
-	}
-	return entryFromHTML(link, pageURL, rawHTML, title, opts)
-}
-
 func entryFromHTML(link string, pageURL *url.URL, rawHTML []byte, title string, opts Options) (*vault.Entry, string, error) {
 	article, err := readability.FromReader(strings.NewReader(string(rawHTML)), pageURL)
 	if err != nil {
@@ -106,17 +84,19 @@ func entryFromHTML(link string, pageURL *url.URL, rawHTML []byte, title string, 
 	}
 
 	excerpt := "## Captured excerpt\n\n" + strings.TrimSpace(md)
+	body := AppendThoughts(excerpt, opts.Thoughts)
+	plain = MergeIndexText(plain, opts.Thoughts)
 	e := &vault.Entry{
 		Type:   entryType,
 		Title:  title,
 		Source: link,
-		Body:   excerpt,
+		Body:   body,
 	}
 	return e, plain, nil
 }
 
 func (c *Capturer) ingestHTML(ctx context.Context, link string, pageURL *url.URL, rawHTML []byte, opts Options) (*Result, error) {
-	e, plain, err := buildEntryFromHTML(link, pageURL, rawHTML, opts)
+	e, plain, post, warnings, err := c.buildEntryFromHTML(ctx, link, pageURL, rawHTML, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +104,15 @@ func (c *Capturer) ingestHTML(ctx context.Context, link string, pageURL *url.URL
 	if err != nil {
 		return nil, err
 	}
+	res.Warnings = append(res.Warnings, warnings...)
 	if err := c.vault.Create(res.Entry); err != nil {
 		return nil, err
+	}
+	if post != nil {
+		res.Warnings = append(res.Warnings, social.FinalizeSocialEntry(ctx, c.client, res.Entry, post)...)
+		if err := vault.WriteEntry(res.Entry.Dir, res.Entry, c.vault.Cipher()); err != nil {
+			return nil, err
+		}
 	}
 	if err := os.WriteFile(filepath.Join(res.Entry.Dir, "extracted.txt"), []byte(plain), fsperm.PrivateFileMode); err != nil {
 		return nil, err

@@ -85,6 +85,7 @@ type entryViewerData struct {
 	ShowNoteTab     bool
 	DefaultTabPage  bool
 	SourceLinkHTML  template.HTML
+	SocialAuthor    *socialAuthorView
 	TabPageHidden   bool
 	TabNoteHidden   bool
 	TabPageBtnClass string
@@ -205,6 +206,7 @@ func (s *Server) buildEntryViewerData(e *vault.Entry) (entryViewerData, error) {
 	if href, ok := safeHTTPURL(e.Source); ok {
 		data.SourceLinkHTML = sourceLinkHTML(href, href)
 	}
+	data.SocialAuthor = socialAuthorFromEntry(e)
 	for _, name := range []string{"screenshot.png", "screenshot.jpg", "screenshot.gif", "screenshot.webp"} {
 		if fileExists(filepath.Join(e.Dir, name)) {
 			data.ScreenshotURL = "/ui/entry/" + e.ID + "/file/" + name

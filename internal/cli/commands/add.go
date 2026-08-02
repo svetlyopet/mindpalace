@@ -17,23 +17,25 @@ import (
 )
 
 var (
-	addTags    []string
-	addTitle   string
-	addType    string
-	addFull    bool
-	addMessage string
+	addTags     []string
+	addTitle    string
+	addType     string
+	addFull     bool
+	addMessage  string
+	addThoughts string
 )
 
 func NewAdd(rt *clictx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "add",
-		Short: "Capture a new entry (note, url, file)",
+		Short: "Capture a new entry (note, url, file, social)",
 	}
 }
 
 func ConfigureAddFlags(add, addNote, addURL *cobra.Command) {
 	add.PersistentFlags().StringSliceVar(&addTags, "tags", nil, "tags (required for url, file, and note with -m or stdin)")
 	add.PersistentFlags().StringVar(&addTitle, "title", "", "entry title (required for url, file, and note with -m or stdin)")
+	add.PersistentFlags().StringVar(&addThoughts, "thoughts", "", "optional commentary appended as a Thoughts section (not used for notes)")
 	add.PersistentFlags().StringVar(&addType, "type", "", "entry type")
 	addURL.Flags().BoolVar(&addFull, "full", false, "save full HTML bundle")
 	addNote.Flags().StringVarP(&addMessage, "message", "m", "", "note text")
@@ -118,6 +120,29 @@ func NewAddURL(rt *clictx.Runtime) *cobra.Command {
 	}
 }
 
+func NewAddSocial(rt *clictx.Runtime) *cobra.Command {
+	return &cobra.Command{
+		Use:   "social <link>",
+		Short: "Capture a public X or Facebook post via oEmbed",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := requireTitleAndTags(cmd, "mp add social"); err != nil {
+				return err
+			}
+			opts, err := addOptions(cmd)
+			if err != nil {
+				return err
+			}
+			applyRequiredCaptureFlags(&opts)
+			res, err := rt.Capturer.Social(context.Background(), args[0], opts)
+			if err != nil {
+				return err
+			}
+			return finishCapture(rt, res)
+		},
+	}
+}
+
 func NewAddFile(rt *clictx.Runtime) *cobra.Command {
 	return &cobra.Command{
 		Use:   "file <path>",
@@ -181,9 +206,9 @@ func addOptions(cmd *cobra.Command) (capture.Options, error) {
 		if !t.Valid() {
 			return opts, fmt.Errorf("invalid type %q", addType)
 		}
-		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, t, addFull)
+		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, t, addFull, addThoughts)
 	} else {
-		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, "", addFull)
+		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, "", addFull, addThoughts)
 	}
 	if !opts.TagsExplicit && input.IsInteractive() {
 		opts.Prompter = input.TerminalTagPrompter{}

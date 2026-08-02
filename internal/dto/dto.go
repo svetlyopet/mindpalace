@@ -9,14 +9,15 @@ import (
 )
 
 type Entry struct {
-	ID      string   `json:"id"`
-	Title   string   `json:"title"`
-	Created string   `json:"created"`
-	Type    string   `json:"type"`
-	Source  string   `json:"source,omitempty"`
-	Tags    []string `json:"tags,omitempty"`
-	Body    string   `json:"body,omitempty"`
-	Dir     string   `json:"dir,omitempty"`
+	ID      string         `json:"id"`
+	Title   string         `json:"title"`
+	Created string         `json:"created"`
+	Type    string         `json:"type"`
+	Source  string         `json:"source,omitempty"`
+	Tags    []string       `json:"tags,omitempty"`
+	Body    string         `json:"body,omitempty"`
+	Dir     string         `json:"dir,omitempty"`
+	Extra   map[string]any `json:"extra,omitempty"`
 }
 
 func EntryFromVault(e *vault.Entry) Entry {
@@ -32,6 +33,7 @@ func EntryFromVault(e *vault.Entry) Entry {
 		Tags:    e.Tags,
 		Body:    e.Body,
 		Dir:     e.Dir,
+		Extra:   e.Extra,
 	}
 }
 

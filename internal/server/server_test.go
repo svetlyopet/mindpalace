@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -91,6 +92,37 @@ func TestAPICaptureNote(t *testing.T) {
 	}
 }
 
+func TestAPICaptureHTMLWithThoughts(t *testing.T) {
+	s, token := testServer(t)
+	ts := httptest.NewServer(s.Handler())
+	defer ts.Close()
+
+	html := `<!DOCTYPE html><html><head><title>Article</title></head><body><article><h1>Title</h1><p>Article body text.</p></article></body></html>`
+	body := fmt.Sprintf(`{"kind":"html","url":"https://example.com/article","html":%q,"title":"Article","tags":[],"thoughts":"save for later"}`, html)
+	req, _ := http.NewRequest(http.MethodPost, ts.URL+"/api/capture", strings.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("status = %d body %s", resp.StatusCode, readBody(resp))
+	}
+	var out struct {
+		Entry struct {
+			Body string `json:"body"`
+		} `json:"entry"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.Entry.Body, "## Thoughts") || !strings.Contains(out.Entry.Body, "save for later") {
+		t.Fatalf("body = %q", out.Entry.Body)
+	}
+}
+
 func TestAPICaptureNoteMissingTitle(t *testing.T) {
 	s, token := testServer(t)
 	ts := httptest.NewServer(s.Handler())
@@ -156,6 +188,25 @@ func TestAPICapturePreview(t *testing.T) {
 	}
 }
 
+func TestAPICaptureSocialUnsupportedURL(t *testing.T) {
+	s, token := testServer(t)
+	ts := httptest.NewServer(s.Handler())
+	defer ts.Close()
+
+	body := `{"kind":"social","url":"https://example.com/article","title":"T","tags":["web"]}`
+	req, _ := http.NewRequest(http.MethodPost, ts.URL+"/api/capture", strings.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", resp.StatusCode)
+	}
+}
+
 func TestAPICaptureUpload(t *testing.T) {
 	s, token := testServer(t)
 	ts := httptest.NewServer(s.Handler())
@@ -176,6 +227,9 @@ func TestAPICaptureUpload(t *testing.T) {
 	if err := w.WriteField("title", "snippet.txt"); err != nil {
 		t.Fatal(err)
 	}
+	if err := w.WriteField("thoughts", "upload commentary"); err != nil {
+		t.Fatal(err)
+	}
 	w.Close()
 
 	req, _ := http.NewRequest(http.MethodPost, ts.URL+"/api/capture/upload", &buf)
@@ -193,6 +247,7 @@ func TestAPICaptureUpload(t *testing.T) {
 		Entry struct {
 			Type string   `json:"type"`
 			Tags []string `json:"tags"`
+			Body string   `json:"body"`
 		} `json:"entry"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
@@ -203,6 +258,9 @@ func TestAPICaptureUpload(t *testing.T) {
 	}
 	if len(out.Entry.Tags) != 0 {
 		t.Fatalf("tags = %v", out.Entry.Tags)
+	}
+	if !strings.Contains(out.Entry.Body, "## Thoughts") || !strings.Contains(out.Entry.Body, "upload commentary") {
+		t.Fatalf("body = %q", out.Entry.Body)
 	}
 }
 

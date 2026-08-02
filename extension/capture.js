@@ -27,7 +27,16 @@ async function loadDraft() {
     document.getElementById("status").textContent = "Nothing to save.";
     return null;
   }
-  document.getElementById("capture-full").checked = await loadDefaultFullHtml();
+  const mode = captureDraft.mode || "page";
+  document.getElementById("capture-heading").textContent =
+    mode === "social" ? "Save social post" : "Save page";
+  const fullLabel = document.getElementById("capture-full-wrap");
+  if (fullLabel) {
+    fullLabel.hidden = mode === "social";
+  }
+  if (mode === "page") {
+    document.getElementById("capture-full").checked = await loadDefaultFullHtml();
+  }
   const titleEl = document.getElementById("capture-title");
   titleEl.value = captureDraft.title || captureDraft.url || "";
   const suggestionsEl = document.getElementById("suggestions");
@@ -59,9 +68,36 @@ async function saveDraft(draft) {
     return;
   }
   const tags = parseTags(document.getElementById("tags").value);
-  const full = document.getElementById("capture-full").checked;
-  status.textContent = full ? "Saving (full bundle may take a moment)…" : "Saving…";
+  const thoughts = document.getElementById("capture-thoughts").value.trim();
+  const mode = draft.mode || "page";
+  const full = mode === "social" ? false : document.getElementById("capture-full").checked;
+  status.textContent =
+    mode === "social"
+      ? "Saving social post…"
+      : full
+        ? "Saving (full bundle may take a moment)…"
+        : "Saving…";
   const base = draft.baseUrl.replace(/\/$/, "");
+  let body;
+  if (mode === "social") {
+    body = {
+      kind: "social",
+      url: draft.url,
+      title,
+      tags,
+      thoughts,
+    };
+  } else {
+    body = {
+      kind: "html",
+      url: draft.url,
+      html: draft.html,
+      title,
+      tags,
+      thoughts,
+      full,
+    };
+  }
   let res;
   try {
     res = await fetch(`${base}/api/capture`, {
@@ -70,14 +106,7 @@ async function saveDraft(draft) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${draft.token}`,
       },
-      body: JSON.stringify({
-        kind: "html",
-        url: draft.url,
-        html: draft.html,
-        title,
-        tags,
-        full,
-      }),
+      body: JSON.stringify(body),
     });
   } catch (err) {
     status.textContent = "Network error: " + (err && err.message ? err.message : "failed");
@@ -88,7 +117,9 @@ async function saveDraft(draft) {
     return;
   }
   await chrome.storage.session.remove("captureDraft");
-  document.getElementById("capture-full").checked = await loadDefaultFullHtml();
+  if (mode === "page") {
+    document.getElementById("capture-full").checked = await loadDefaultFullHtml();
+  }
   const afterSave = document.getElementById("after-save");
   const openLink = document.getElementById("open-library");
   if (openLink && afterSave) {

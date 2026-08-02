@@ -74,6 +74,21 @@ func TestAddURLRequiresFlags(t *testing.T) {
 	}
 }
 
+func TestAddSocialRequiresFlags(t *testing.T) {
+	rt, _ := testRuntime(t)
+	add := NewAdd(rt)
+	addSocial := NewAddSocial(rt)
+	ConfigureAddFlags(add, NewAddNote(rt), NewAddURL(rt))
+	add.AddCommand(addSocial)
+
+	addTitle = ""
+	addTags = nil
+	err := addSocial.RunE(addSocial, []string{"https://x.com/u/status/1"})
+	if err == nil || !strings.Contains(err.Error(), "title") {
+		t.Fatalf("RunE = %v", err)
+	}
+}
+
 func TestAddFileRequiresFlags(t *testing.T) {
 	rt, _ := testRuntime(t)
 	add := NewAdd(rt)

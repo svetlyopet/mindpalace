@@ -45,9 +45,10 @@ func (c LLMConfig) APIKey() string {
 }
 
 type CaptureConfig struct {
-	AutoTag  bool   `yaml:"auto_tag"`
-	FullHTML bool   `yaml:"full_html"`
-	OCR      string `yaml:"ocr"`
+	AutoTag      bool   `yaml:"auto_tag"`
+	FullHTML     bool   `yaml:"full_html"`
+	OCR          string `yaml:"ocr"`
+	SocialOEmbed bool   `yaml:"social_oembed"`
 }
 
 func Default() *Config {
@@ -59,9 +60,10 @@ func Default() *Config {
 			APIKeyEnv: "MINDPALACE_API_KEY",
 		},
 		Capture: CaptureConfig{
-			AutoTag:  true,
-			FullHTML: false,
-			OCR:      "auto",
+			AutoTag:      true,
+			FullHTML:     false,
+			OCR:          "auto",
+			SocialOEmbed: true,
 		},
 		Serve: ServeConfig{
 			Addr: defaultServeAddr,

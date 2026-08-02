@@ -17,7 +17,7 @@ func (s *Server) apiCaptureUploadPreview(w http.ResponseWriter, r *http.Request)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	opts := capture.Options{Title: title}
+	opts := capture.Options{Title: title, Thoughts: r.FormValue("thoughts")}
 	preview, err := s.lib.Capturer.PreviewUpload(r.Context(), filename, data, opts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -36,7 +36,7 @@ func (s *Server) apiCaptureUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	opts := capture.Options{Title: title}
+	opts := capture.Options{Title: title, Thoughts: r.FormValue("thoughts")}
 	if tags, ok, err := parseUploadTags(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

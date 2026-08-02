@@ -102,8 +102,11 @@ func TestCommitCapture(t *testing.T) {
 }
 
 func TestCaptureOptionsFromFields(t *testing.T) {
-	opts := CaptureOptionsFromFields("T", []string{"a"}, true, vault.TypeArticle, true)
+	opts := CaptureOptionsFromFields("T", []string{"a"}, true, vault.TypeArticle, true, "my take")
 	if opts.Title != "T" || opts.Type != vault.TypeArticle || !opts.FullHTML || !opts.TagsExplicit {
 		t.Fatalf("opts = %+v", opts)
+	}
+	if opts.Thoughts != "my take" {
+		t.Fatalf("thoughts = %q", opts.Thoughts)
 	}
 }

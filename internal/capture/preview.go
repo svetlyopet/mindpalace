@@ -40,6 +40,18 @@ func (c *Capturer) PreviewNote(ctx context.Context, body string, opts Options) (
 }
 
 func (c *Capturer) PreviewURL(ctx context.Context, link string, opts Options) (*Preview, error) {
+	if res, ok := c.trySocialEntry(ctx, link, opts); ok {
+		suggested, _ := c.suggestForIndex(ctx, res.entry.Title, res.plain)
+		title := res.entry.Title
+		if t := strings.TrimSpace(opts.Title); t != "" {
+			title = t
+		}
+		return &Preview{
+			Title:         title,
+			Type:          res.entry.Type,
+			SuggestedTags: suggested,
+		}, nil
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, nil)
 	if err != nil {
 		return nil, err
@@ -69,7 +81,7 @@ func (c *Capturer) PreviewHTML(ctx context.Context, link string, rawHTML []byte,
 	if err != nil {
 		return nil, fmt.Errorf("invalid url: %w", err)
 	}
-	e, plain, err := previewEntryFromHTML(link, pageURL, rawHTML, opts)
+	e, plain, _, err := c.previewEntryFromHTML(ctx, link, pageURL, rawHTML, opts)
 	if err != nil {
 		return nil, err
 	}

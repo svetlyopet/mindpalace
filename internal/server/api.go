@@ -81,14 +81,15 @@ func (s *Server) apiDeleteEntry(w http.ResponseWriter, r *http.Request, id strin
 }
 
 type captureReq struct {
-	Kind  string    `json:"kind"`
-	Text  string    `json:"text"`
-	URL   string    `json:"url"`
-	HTML  string    `json:"html"`
-	Title string    `json:"title"`
-	Tags  *[]string `json:"tags"`
-	Type  string    `json:"type"`
-	Full  bool      `json:"full"`
+	Kind     string    `json:"kind"`
+	Text     string    `json:"text"`
+	URL      string    `json:"url"`
+	HTML     string    `json:"html"`
+	Title    string    `json:"title"`
+	Tags     *[]string `json:"tags"`
+	Type     string    `json:"type"`
+	Full     bool      `json:"full"`
+	Thoughts string    `json:"thoughts"`
 }
 
 func captureOptionsFromReq(req captureReq) capture.Options {
@@ -98,7 +99,7 @@ func captureOptionsFromReq(req captureReq) capture.Options {
 		tags = *req.Tags
 	}
 	typ := vault.Type(req.Type)
-	return library.CaptureOptionsFromFields(req.Title, tags, tagsExplicit, typ, req.Full)
+	return library.CaptureOptionsFromFields(req.Title, tags, tagsExplicit, typ, req.Full, req.Thoughts)
 }
 
 func (s *Server) apiCapturePreview(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +122,8 @@ func (s *Server) apiCapturePreview(w http.ResponseWriter, r *http.Request) {
 		preview, err = s.lib.Capturer.PreviewURL(r.Context(), req.URL, opts)
 	case "html":
 		preview, err = s.lib.Capturer.PreviewHTML(r.Context(), req.URL, []byte(req.HTML), opts)
+	case "social":
+		preview, err = s.lib.Capturer.PreviewSocial(r.Context(), req.URL, opts)
 	default:
 		http.Error(w, "invalid kind", http.StatusBadRequest)
 		return
@@ -158,6 +161,8 @@ func (s *Server) apiCapture(w http.ResponseWriter, r *http.Request) {
 		res, err = s.lib.Capturer.URL(r.Context(), req.URL, opts)
 	case "html":
 		res, err = s.lib.Capturer.URLFromHTML(r.Context(), req.URL, []byte(req.HTML), opts)
+	case "social":
+		res, err = s.lib.Capturer.Social(r.Context(), req.URL, opts)
 	default:
 		http.Error(w, "invalid kind", http.StatusBadRequest)
 		return

@@ -16,8 +16,9 @@ func Register(root *cobra.Command, rt *clictx.Runtime) {
 	addNote := NewAddNote(rt)
 	addURL := NewAddURL(rt)
 	addFile := NewAddFile(rt)
+	addSocial := NewAddSocial(rt)
 	ConfigureAddFlags(add, addNote, addURL)
-	add.AddCommand(addNote, addURL, addFile)
+	add.AddCommand(addNote, addURL, addFile, addSocial)
 
 	vault := NewVault(rt)
 	vault.AddCommand(

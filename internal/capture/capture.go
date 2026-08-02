@@ -35,6 +35,7 @@ type Options struct {
 	Prompter     TagPrompter
 	Type         vault.Type
 	FullHTML     bool
+	Thoughts     string // optional user commentary (ignored for notes)
 }
 
 type Result struct {
@@ -110,7 +111,8 @@ func (c *Capturer) File(ctx context.Context, path string, opts Options) (*Result
 		if err != nil {
 			return nil, err
 		}
-		body := string(data)
+		body := AppendThoughts(string(data), opts.Thoughts)
+		indexText := MergeIndexText(string(data), opts.Thoughts)
 		e := &vault.Entry{
 			Type:  vault.TypeSnippet,
 			Title: opts.Title,
@@ -119,7 +121,7 @@ func (c *Capturer) File(ctx context.Context, path string, opts Options) (*Result
 		if opts.Type != "" {
 			e.Type = opts.Type
 		}
-		res, err = c.applyTags(ctx, e, body, opts)
+		res, err = c.applyTags(ctx, e, indexText, opts)
 	}
 	if err != nil {
 		return nil, err
@@ -171,6 +173,7 @@ func (c *Capturer) captureImage(ctx context.Context, path string, opts Options) 
 	if opts.Type != "" {
 		e.Type = opts.Type
 	}
+	e.Body = AppendThoughts("", opts.Thoughts)
 	var plain string
 	ocrUsed := false
 	warnings := []string{}
@@ -183,7 +186,7 @@ func (c *Capturer) captureImage(ctx context.Context, path string, opts Options) 
 			ocrUsed = used
 		}
 	}
-	res, err := c.applyTags(ctx, e, plain, opts)
+	res, err := c.applyTags(ctx, e, MergeIndexText(plain, opts.Thoughts), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +238,7 @@ func socialHost(host string) bool {
 	host = strings.ToLower(host)
 	host = strings.TrimPrefix(host, "www.")
 	switch host {
-	case "x.com", "twitter.com", "reddit.com", "bsky.app", "mastodon.social":
+	case "x.com", "twitter.com", "facebook.com", "reddit.com", "bsky.app", "mastodon.social":
 		return true
 	}
 	return strings.Contains(host, "mastodon.")

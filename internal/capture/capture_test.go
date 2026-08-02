@@ -2,6 +2,8 @@ package capture
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/svetlyopet/mindpalace/internal/config"
@@ -145,5 +147,51 @@ func TestParseTitleEditorText(t *testing.T) {
 				t.Fatalf("ParseTitleEditorText() = %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestNoteIgnoresThoughts(t *testing.T) {
+	t.Parallel()
+	v, err := vault.Init(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := New(v, stubTagger{}, config.Default().Capture)
+	res, err := c.Note(context.Background(), "Note body only.", Options{
+		Title:        "T",
+		Tags:         []string{"note"},
+		TagsExplicit: true,
+		Thoughts:     "should not appear",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(res.Entry.Body, "## Thoughts") {
+		t.Fatalf("body = %q", res.Entry.Body)
+	}
+}
+
+func TestFileSnippetWithThoughts(t *testing.T) {
+	t.Parallel()
+	v, err := vault.Init(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := New(v, stubTagger{}, config.Default().Capture)
+	path := t.TempDir() + "/sample.txt"
+	if err := os.WriteFile(path, []byte("file content"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res, err := c.File(context.Background(), path, Options{
+		Title:        "Snippet",
+		Tags:         []string{"ref"},
+		TagsExplicit: true,
+		Thoughts:     "related to project",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(res.Entry.Body, "file content") || !strings.Contains(res.Entry.Body, "## Thoughts") || !strings.Contains(res.Entry.Body, "related to project") {
+		t.Fatalf("body = %q", res.Entry.Body)
 	}
 }

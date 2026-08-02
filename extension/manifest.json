@@ -3,7 +3,7 @@
   "name": "Mindpalace Capture",
   "version": "0.1.0",
   "description": "Save the current page to your local Mindpalace vault.",
-  "permissions": ["activeTab", "storage", "scripting", "windows", "notifications"],
+  "permissions": ["activeTab", "storage", "scripting", "windows", "notifications", "contextMenus"],
   "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
   "action": {
     "default_title": "Save to Mindpalace",
