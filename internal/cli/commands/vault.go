@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/svetlyopet/mindpalace/internal/apiclient"
 	"github.com/svetlyopet/mindpalace/internal/cli/input"
 	"github.com/svetlyopet/mindpalace/internal/clictx"
 	"github.com/svetlyopet/mindpalace/internal/config"
@@ -27,7 +28,10 @@ func NewVaultEncrypt(rt *clictx.Runtime) *cobra.Command {
 		Use:   "encrypt",
 		Short: "Encrypt vault contents at rest",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := rt.Open(); err != nil {
+			if rt.ProbeServe() {
+				return apiclient.RefuseEncryptionChange()
+			}
+			if err := rt.OpenLocal(); err != nil {
 				return err
 			}
 			defer rt.Close()
@@ -63,7 +67,10 @@ func NewVaultDecrypt(rt *clictx.Runtime) *cobra.Command {
 		Use:   "decrypt",
 		Short: "Decrypt vault contents at rest and disable encryption",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := rt.Open(); err != nil {
+			if rt.ProbeServe() {
+				return apiclient.RefuseEncryptionChange()
+			}
+			if err := rt.OpenLocal(); err != nil {
 				return err
 			}
 			defer rt.Close()
@@ -98,7 +105,10 @@ func NewVaultPassword(rt *clictx.Runtime) *cobra.Command {
 		Use:   "password",
 		Short: "Set or change the vault encryption password",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := rt.Open(); err != nil {
+			if rt.ProbeServe() {
+				return apiclient.RefuseEncryptionChange()
+			}
+			if err := rt.OpenLocal(); err != nil {
 				return err
 			}
 			defer rt.Close()

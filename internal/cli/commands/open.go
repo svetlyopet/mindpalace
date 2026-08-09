@@ -10,7 +10,7 @@ import (
 )
 
 func NewOpen(rt *clictx.Runtime) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "open <id>",
 		Short: "Open entry source URL or directory",
 		Args:  cobra.ExactArgs(1),
@@ -26,6 +26,8 @@ func NewOpen(rt *clictx.Runtime) *cobra.Command {
 			return openTarget(target)
 		},
 	}
+	clictx.MarkVaultOnly(cmd)
+	return cmd
 }
 
 func openTarget(target string) error {

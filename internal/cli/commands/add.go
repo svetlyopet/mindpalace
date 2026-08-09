@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/svetlyopet/mindpalace/internal/apiclient"
 	"github.com/svetlyopet/mindpalace/internal/capture"
 	"github.com/svetlyopet/mindpalace/internal/cli/input"
 	"github.com/svetlyopet/mindpalace/internal/clictx"
@@ -63,7 +65,10 @@ func NewAddNote(rt *clictx.Runtime) *cobra.Command {
 					return err
 				}
 				if !opts.TagsExplicit {
-					suggested, _ := rt.Capturer.SuggestTags(context.Background(), defaultTitle, body)
+					suggested, err := suggestNoteTags(rt, defaultTitle, body)
+					if err != nil {
+						return err
+					}
 					opts.Tags, err = noteTagsViaEditor(ed, opts.Tags, suggested)
 					if err != nil {
 						return err
@@ -87,6 +92,15 @@ func NewAddNote(rt *clictx.Runtime) *cobra.Command {
 				applyRequiredCaptureFlags(&opts)
 			}
 
+			if rt.Remote() {
+				return finishRemoteCapture(rt, apiclient.CaptureReq{
+					Kind:  "note",
+					Text:  body,
+					Title: opts.Title,
+					Tags:  tagsPtr(opts),
+					Type:  string(opts.Type),
+				})
+			}
 			res, err := rt.Capturer.Note(context.Background(), body, opts)
 			if err != nil {
 				return err
@@ -111,6 +125,17 @@ func NewAddURL(rt *clictx.Runtime) *cobra.Command {
 			}
 			applyRequiredCaptureFlags(&opts)
 			opts.FullHTML = addFull
+			if rt.Remote() {
+				return finishRemoteCapture(rt, apiclient.CaptureReq{
+					Kind:     "url",
+					URL:      args[0],
+					Title:    opts.Title,
+					Tags:     tagsPtr(opts),
+					Type:     string(opts.Type),
+					Full:     opts.FullHTML,
+					Thoughts: opts.Thoughts,
+				})
+			}
 			res, err := rt.Capturer.URL(context.Background(), args[0], opts)
 			if err != nil {
 				return err
@@ -134,6 +159,16 @@ func NewAddSocial(rt *clictx.Runtime) *cobra.Command {
 				return err
 			}
 			applyRequiredCaptureFlags(&opts)
+			if rt.Remote() {
+				return finishRemoteCapture(rt, apiclient.CaptureReq{
+					Kind:     "social",
+					URL:      args[0],
+					Title:    opts.Title,
+					Tags:     tagsPtr(opts),
+					Type:     string(opts.Type),
+					Thoughts: opts.Thoughts,
+				})
+			}
 			res, err := rt.Capturer.Social(context.Background(), args[0], opts)
 			if err != nil {
 				return err
@@ -157,6 +192,21 @@ func NewAddFile(rt *clictx.Runtime) *cobra.Command {
 				return err
 			}
 			applyRequiredCaptureFlags(&opts)
+			if rt.Remote() {
+				data, err := os.ReadFile(args[0])
+				if err != nil {
+					return err
+				}
+				res, err := rt.API.CaptureUpload(context.Background(), filepath.Base(args[0]), data, opts.Title, opts.Tags, opts.Thoughts)
+				if err != nil {
+					return err
+				}
+				for _, w := range res.Warnings {
+					fmt.Fprintln(os.Stderr, "warning:", w)
+				}
+				fmt.Printf("Created %s  %s\n", res.Entry.ID, res.Entry.Title)
+				return nil
+			}
 			res, err := rt.Capturer.File(context.Background(), args[0], opts)
 			if err != nil {
 				return err
@@ -225,6 +275,44 @@ func finishCapture(rt *clictx.Runtime, res *capture.Result) error {
 	}
 	fmt.Printf("Created %s  %s\n", res.Entry.ID, res.Entry.Title)
 	return nil
+}
+
+func finishRemoteCapture(rt *clictx.Runtime, req apiclient.CaptureReq) error {
+	res, err := rt.API.Capture(context.Background(), req)
+	if err != nil {
+		return err
+	}
+	for _, w := range res.Warnings {
+		fmt.Fprintln(os.Stderr, "warning:", w)
+	}
+	fmt.Printf("Created %s  %s\n", res.Entry.ID, res.Entry.Title)
+	return nil
+}
+
+func tagsPtr(opts capture.Options) *[]string {
+	if !opts.TagsExplicit {
+		return nil
+	}
+	tags := opts.Tags
+	if tags == nil {
+		tags = []string{}
+	}
+	return &tags
+}
+
+func suggestNoteTags(rt *clictx.Runtime, title, body string) ([]string, error) {
+	if rt.Remote() {
+		preview, err := rt.API.CapturePreview(context.Background(), apiclient.CaptureReq{
+			Kind:  "note",
+			Text:  body,
+			Title: title,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return preview.SuggestedTags, nil
+	}
+	return rt.Capturer.SuggestTags(context.Background(), title, body)
 }
 
 func noteBody(rt *clictx.Runtime) (string, bool, error) {

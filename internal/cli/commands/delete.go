@@ -23,6 +23,26 @@ func NewDelete(rt *clictx.Runtime) *cobra.Command {
 		Short: "Delete an entry and rebuild the search index",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if rt.Remote() {
+				e, err := rt.API.GetEntry(context.Background(), args[0])
+				if err != nil {
+					return err
+				}
+				if err := confirmDelete(e.ID, e.Title); err != nil {
+					return err
+				}
+				res, err := rt.API.DeleteEntry(context.Background(), e.ID)
+				if err != nil {
+					return err
+				}
+				if rt.JSON {
+					return json.NewEncoder(os.Stdout).Encode(res)
+				}
+				fmt.Printf("Deleted %s  %s\n", res.ID, res.Title)
+				fmt.Printf("Reindexed %d entries, removed %d stale, took %s\n",
+					res.Reindex.Indexed, res.Reindex.Removed, res.Reindex.Took)
+				return nil
+			}
 			e, err := rt.Lib.GetEntry(args[0])
 			if err != nil {
 				return err

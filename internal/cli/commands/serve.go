@@ -27,7 +27,7 @@ func NewServe(rt *clictx.Runtime) *cobra.Command {
 		Use:   "serve",
 		Short: "Start the local web UI and API",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := rt.Open(); err != nil {
+			if err := rt.OpenLocal(); err != nil {
 				return err
 			}
 			defer rt.Close()

@@ -1,9 +1,13 @@
 package clictx
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/svetlyopet/mindpalace/internal/config"
 	"github.com/svetlyopet/mindpalace/internal/testenv"
 )
 
@@ -92,5 +96,114 @@ func TestEnsureVaultUnlockedEncryptedUnlocked(t *testing.T) {
 	vi := testenv.TempEncryptedVaultIndex(t, "pw", false)
 	if err := EnsureVaultUnlocked(vi.Vault, true); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestAppOpenRemoteWhenServeUp(t *testing.T) {
+	_, cfg, dir := testenv.TempVault(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/session" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	t.Cleanup(srv.Close)
+	cfg.Serve.Addr = strings.TrimPrefix(srv.URL, "http://")
+	cfg.Serve.Token = "test-token"
+	if err := config.Save(dir, cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	app := &App{VaultFlag: dir}
+	if err := app.Open(); err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+	if !app.Remote() {
+		t.Fatal("expected remote mode when serve is up")
+	}
+	if app.Index != nil || app.Lib != nil {
+		t.Fatal("remote mode must not open Bleve")
+	}
+}
+
+func TestAppOpenLocalWhenServeDown(t *testing.T) {
+	_, cfg, dir := testenv.TempVault(t)
+	cfg.Serve.Addr = "127.0.0.1:1"
+	cfg.Serve.Token = "test-token"
+	if err := config.Save(dir, cfg); err != nil {
+		t.Fatal(err)
+	}
+	app := &App{VaultFlag: dir}
+	if err := app.Open(); err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+	if app.Remote() {
+		t.Fatal("expected local mode when serve is down")
+	}
+	if app.Lib == nil {
+		t.Fatal("expected local library")
+	}
+}
+
+func TestAppOpenLocalIgnoresServe(t *testing.T) {
+	_, cfg, dir := testenv.TempVault(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(srv.Close)
+	cfg.Serve.Addr = strings.TrimPrefix(srv.URL, "http://")
+	cfg.Serve.Token = "test-token"
+	if err := config.Save(dir, cfg); err != nil {
+		t.Fatal(err)
+	}
+	app := &App{VaultFlag: dir}
+	if err := app.OpenLocal(); err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+	if app.Remote() {
+		t.Fatal("OpenLocal must not attach API")
+	}
+	if app.Lib == nil {
+		t.Fatal("expected local library")
+	}
+}
+
+func TestAppOpenIgnoresNonMindpalaceListener(t *testing.T) {
+	_, cfg, dir := testenv.TempVault(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "ok", http.StatusOK)
+	}))
+	t.Cleanup(srv.Close)
+	cfg.Serve.Addr = strings.TrimPrefix(srv.URL, "http://")
+	cfg.Serve.Token = "test-token"
+	if err := config.Save(dir, cfg); err != nil {
+		t.Fatal(err)
+	}
+	app := &App{VaultFlag: dir}
+	if err := app.Open(); err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+	if app.Remote() {
+		t.Fatal("non-mp response should use local mode")
+	}
+}
+
+func TestMarkVaultOnlyAndRefuseWhenServe(t *testing.T) {
+	root := &cobra.Command{Use: "mp"}
+	edit := &cobra.Command{Use: "edit"}
+	reindex := &cobra.Command{Use: "reindex"}
+	MarkVaultOnly(edit)
+	MarkRefuseWhenServe(reindex)
+	root.AddCommand(edit, reindex)
+	if !VaultOnly(edit) {
+		t.Fatal("VaultOnly")
+	}
+	if !RefuseWhenServe(reindex) {
+		t.Fatal("RefuseWhenServe")
 	}
 }

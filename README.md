@@ -113,6 +113,8 @@ mp serve --addr 127.0.0.1:8080
 
 On startup, the server prints the listen URL and reminds you that the API token lives in the vault `config.yaml` under `serve.token`. The extension and HTTP API use that token; the browser UI uses a separate session cookie after unlock.
 
+While `mp serve` is running, other CLI commands (`search`, `list`, `show`, `add`, `tag`, `tags`, `delete`, `vault unlock` / `lock`) talk to that local API automatically so they do not fight the search index lock. `edit` and `open` still use vault files on disk (the server refreshes the index). Stop the server before `mp reindex` or vault encryption changes (`encrypt` / `decrypt` / `password`).
+
 For full flags: `mp help` and `mp <command> --help`.
 
 ## Encrypted vault

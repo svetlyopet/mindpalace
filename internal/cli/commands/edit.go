@@ -7,7 +7,7 @@ import (
 )
 
 func NewEdit(rt *clictx.Runtime) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "edit <id>",
 		Short: "Edit entry.md in your editor (config, $EDITOR, or vim)",
 		Args:  cobra.ExactArgs(1),
@@ -24,7 +24,13 @@ func NewEdit(rt *clictx.Runtime) *cobra.Command {
 			if err := input.RunEditor(ed, path); err != nil {
 				return err
 			}
+			if rt.Remote() {
+				// Server fsnotify watcher refreshes the index.
+				return nil
+			}
 			return rt.Lib.ReindexEntryAfterEdit(cmd.Context(), e.ID)
 		},
 	}
+	clictx.MarkVaultOnly(cmd)
+	return cmd
 }

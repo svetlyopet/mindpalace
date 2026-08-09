@@ -19,6 +19,13 @@ func NewSearch(rt *clictx.Runtime) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if rt.Remote() {
+				hits, err := rt.API.ListEntries(context.Background(), q)
+				if err != nil {
+					return err
+				}
+				return cliformat.RenderSearchHits(rt.App, hits)
+			}
 			results, err := rt.Searcher.Search(context.Background(), q)
 			if err != nil {
 				return err
@@ -36,6 +43,13 @@ func NewList(rt *clictx.Runtime) *cobra.Command {
 			q, err := cliformat.BuildQuery("")
 			if err != nil {
 				return err
+			}
+			if rt.Remote() {
+				hits, err := rt.API.ListEntries(context.Background(), q)
+				if err != nil {
+					return err
+				}
+				return cliformat.RenderSearchHits(rt.App, hits)
 			}
 			results, err := rt.Searcher.Search(context.Background(), q)
 			if err != nil {

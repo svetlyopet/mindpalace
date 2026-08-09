@@ -9,7 +9,7 @@ import (
 )
 
 func NewReindex(rt *clictx.Runtime) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "reindex",
 		Short: "Rebuild search index and metadata cache",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -22,4 +22,6 @@ func NewReindex(rt *clictx.Runtime) *cobra.Command {
 			return nil
 		},
 	}
+	clictx.MarkRefuseWhenServe(cmd)
+	return cmd
 }

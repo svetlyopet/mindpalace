@@ -23,6 +23,10 @@ func NewTag(rt *clictx.Runtime) *cobra.Command {
 					return clictx.Usagef("tag changes must be +tag or -tag")
 				}
 			}
+			if rt.Remote() {
+				_, err := rt.API.UpdateTags(cmd.Context(), args[0], add, remove)
+				return err
+			}
 			_, err := rt.Lib.UpdateTags(cmd.Context(), args[0], add, remove)
 			return err
 		},
