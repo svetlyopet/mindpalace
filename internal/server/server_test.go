@@ -59,8 +59,9 @@ func TestAPIAssetTraversal(t *testing.T) {
 	}
 	resp.Body.Close()
 	switch resp.StatusCode {
-	case http.StatusForbidden, http.StatusNotFound, http.StatusFound, http.StatusTemporaryRedirect:
+	case http.StatusForbidden, http.StatusNotFound, http.StatusMovedPermanently, http.StatusFound, http.StatusTemporaryRedirect:
 		// denied, missing, or redirected away from the traversal target
+		// (301: net/http cleans ".." segments before routing)
 	default:
 		t.Fatalf("status = %d", resp.StatusCode)
 	}
