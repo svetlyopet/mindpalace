@@ -109,27 +109,14 @@ async function saveDraft(draft) {
       body: JSON.stringify(body),
     });
   } catch (err) {
-    status.textContent = "Network error: " + (err && err.message ? err.message : "failed");
+    status.textContent = "Mindpalace failed to add the entry.";
     return;
   }
   if (!res.ok) {
-    status.textContent = await res.text();
+    status.textContent = "Mindpalace failed to add the entry.";
     return;
   }
   await chrome.storage.session.remove("captureDraft");
-  if (mode === "page") {
-    document.getElementById("capture-full").checked = await loadDefaultFullHtml();
-  }
-  const afterSave = document.getElementById("after-save");
-  const openLink = document.getElementById("open-library");
-  if (openLink && afterSave) {
-    openLink.href = base + "/";
-    afterSave.hidden = false;
-    status.textContent = "Saved.";
-    status.style.color = "#0d6b0d";
-    document.getElementById("save").disabled = true;
-    return;
-  }
   window.close();
 }
 
