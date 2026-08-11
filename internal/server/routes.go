@@ -28,6 +28,11 @@ func (s *Server) registerRoutes(mux *http.ServeMux) {
 	s.handleAPIFunc(mux, "GET /api/entries/{id}/files/{path...}", s.apiServeFileRoute)
 	s.handleAPIFunc(mux, "POST /api/entries/{id}/tags", s.apiUpdateTagsRoute)
 	s.handleAPIFunc(mux, "DELETE /api/entries/{id}", s.apiDeleteEntryRoute)
+
+	// Catch unknown UI paths. Split patterns avoid conflicting with GET / —
+	// a lone GET /{path...} also matches the root in Go 1.22+ ServeMux.
+	mux.HandleFunc("GET /{path}", s.wrapUI(s.redirectToHome))
+	mux.HandleFunc("GET /{path}/{rest...}", s.wrapUI(s.redirectToHome))
 }
 
 func (s *Server) wrapUI(fn http.HandlerFunc) http.HandlerFunc {

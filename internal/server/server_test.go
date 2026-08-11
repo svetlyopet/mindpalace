@@ -51,12 +51,17 @@ func TestAPIAssetTraversal(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, ts.URL+"/api/entries/abc123/files/../../etc/passwd", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
-	resp, err := http.DefaultClient.Do(req)
+	// Do not follow redirects: path cleaning may land on an unknown UI path that
+	// redirects home, which must not be treated as a successful file read.
+	resp, err := noRedirectClient().Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
 	resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden && resp.StatusCode != http.StatusNotFound {
+	switch resp.StatusCode {
+	case http.StatusForbidden, http.StatusNotFound, http.StatusFound, http.StatusTemporaryRedirect:
+		// denied, missing, or redirected away from the traversal target
+	default:
 		t.Fatalf("status = %d", resp.StatusCode)
 	}
 }

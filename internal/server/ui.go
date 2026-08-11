@@ -162,6 +162,15 @@ func (s *Server) renderLayout(w http.ResponseWriter, r *http.Request, pageFiles 
 	_, _ = buf.WriteTo(w)
 }
 
+func (s *Server) redirectToHome(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
 func (s *Server) handleLibrary(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
@@ -221,7 +230,7 @@ func (s *Server) handleUIEntryViewer(w http.ResponseWriter, r *http.Request) {
 	e, err := s.lib.GetEntry(id)
 	if err != nil {
 		if errors.Is(err, vault.ErrNotFound) {
-			http.NotFound(w, r)
+			s.redirectToHome(w, r)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -251,7 +260,7 @@ func (s *Server) handleEntryPage(w http.ResponseWriter, r *http.Request) {
 	e, err := s.lib.GetEntry(id)
 	if err != nil {
 		if errors.Is(err, vault.ErrNotFound) {
-			http.NotFound(w, r)
+			s.redirectToHome(w, r)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
