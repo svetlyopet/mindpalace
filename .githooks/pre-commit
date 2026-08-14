@@ -2,7 +2,9 @@
 
 set -Eeuo pipefail
 
-STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.go$" || true)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+STAGED_GO_FILES=$(echo "$STAGED_FILES" | grep "\.go$" || true)
+STAGED_VULN_FILES=$(echo "$STAGED_FILES" | grep -E '\.go$|^go\.mod$|^go\.sum$' || true)
 
 function make-fmt() {
   # only format if Go files have changed
@@ -20,6 +22,15 @@ function make-lint() {
     echo 'Running `make lint`.'
     make lint
     echo 'Lint completed.'
+  fi
+}
+
+function govulncheck-scan() {
+  # only scan if Go sources or module files have changed
+  if [ -n "$STAGED_VULN_FILES" ]; then
+    echo 'Running `make govulncheck`.'
+    make govulncheck
+    echo 'govulncheck completed.'
   fi
 }
 
@@ -45,5 +56,6 @@ trap 'failed' ERR
 
 make-fmt
 make-lint
+govulncheck-scan
 semgrep-scan
 secrets-scan

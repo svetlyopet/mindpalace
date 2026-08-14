@@ -7,7 +7,7 @@ Contributor documentation for [Mindpalace](README.md). End-user setup and usage 
 - Go version listed in [`go.mod`](go.mod) (1.25 or newer today).
 - [`make`](Makefile) for common tasks.
 - Optional: [Syft](https://github.com/anchore/syft) on `PATH` when running `make release` (SBOM generation uses the same tool as CI).
-- [gitleaks](https://github.com/gitleaks/gitleaks) and [semgrep](https://semgrep.dev/) on `PATH` when using `make setup-hooks` (pre-commit runs both on every commit).
+- [gitleaks](https://github.com/gitleaks/gitleaks) and [semgrep](https://semgrep.dev/) on `PATH` when using `make setup-hooks` (pre-commit runs both on every commit). Pre-commit also runs `make govulncheck` when staged files include `*.go`, `go.mod`, or `go.sum` (pinned in `go.mod`; needs Go, not a separate binary).
 
 ## Local build and test
 
@@ -63,7 +63,7 @@ Path exclusions use [`.semgrepignore`](.semgrepignore) ([Ignoring files, folders
 
 Template XSS hardening uses validated source links and social author profile links (`safeHTTPURL` + `html/template` anchor builders in [`internal/server/ui_safeurl.go`](internal/server/ui_safeurl.go)) and Go-computed CSS classes in [`internal/server/ui.go`](internal/server/ui.go).
 
-Semgrep also runs locally via the pre-commit hook (`--verbose`); OWASP ZAP remains CI-only (Docker action). See **Security scanning**.
+Semgrep also runs locally via the pre-commit hook (`--verbose`); govulncheck runs in that hook when Go sources or `go.mod` / `go.sum` are staged. OWASP ZAP remains CI-only (Docker action). See **Security scanning**.
 
 ## Local release snapshot
 
