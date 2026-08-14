@@ -51,13 +51,17 @@ jobs:
               echo "::error::missing archive $subject for $sbom" >&2
               exit 1
             fi
-            json="$(jq --arg s "$subject" --arg b "$sbom" '. + [{subject:$s,sbom:$b}]' <<< "$json")"
+            json="$(jq -c --arg s "$subject" --arg b "$sbom" '. + [{subject:$s,sbom:$b}]' <<< "$json")"
           done
           if [[ "$json" == "[]" ]]; then
             echo "::error::no SPDX SBOMs found under dist/" >&2
             exit 1
           fi
-          echo "json=$json" >> "$GITHUB_OUTPUT"
+          {
+            echo "json<<EOF"
+            jq -c . <<< "$json"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v7
         with:
