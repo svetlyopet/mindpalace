@@ -71,7 +71,7 @@ func TestCLIHappyPath(t *testing.T) {
 		t.Fatalf("title = %q", entry.Title)
 	}
 
-	if _, errOut, code = runMP(t, dir, nil, "", "tag", id, "+extra"); code != 0 {
+	if _, errOut, code = runMP(t, dir, nil, "", "tag", id, "--add", "extra"); code != 0 {
 		t.Fatalf("tag code=%d err=%q", code, errOut)
 	}
 	out, _, code = runMP(t, dir, nil, "", "--json", "list", "--tag", "extra")

@@ -91,7 +91,7 @@ mp --json show <id>    # machine-readable output for scripts
 ### Tags
 
 ```bash
-mp tag <id> +new-tag -old-tag
+mp tag <id> --add new-tag --remove old-tag
 mp tags
 ```
 

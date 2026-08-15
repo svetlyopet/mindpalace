@@ -150,7 +150,13 @@ func TestShowJSON(t *testing.T) {
 func TestTagCommand(t *testing.T) {
 	rt, _ := testRuntime(t)
 	cmd := NewTag(rt)
-	if err := cmd.RunE(cmd, []string{"abc123", "+gamma", "-beta"}); err != nil {
+	if err := cmd.Flags().Set("add", "gamma"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Flags().Set("remove", "beta"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.RunE(cmd, []string{"abc123"}); err != nil {
 		t.Fatal(err)
 	}
 	e, err := rt.Lib.GetEntry("abc123")
@@ -204,10 +210,25 @@ func TestTagsCommand(t *testing.T) {
 
 func TestTagInvalidArg(t *testing.T) {
 	rt, _ := testRuntime(t)
-	cmd := NewTag(rt)
-	err := cmd.RunE(cmd, []string{"abc123", "bad"})
-	if err == nil {
-		t.Fatal("expected usage error")
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{name: "missing flags", args: []string{"abc123"}},
+		{name: "extra positional args", args: []string{"abc123", "extra"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := NewTag(rt)
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			cmd.SetArgs(tt.args)
+			cmd.SetOut(io.Discard)
+			cmd.SetErr(io.Discard)
+			if err := cmd.Execute(); err == nil {
+				t.Fatal("expected usage error")
+			}
+		})
 	}
 }
 
