@@ -53,6 +53,12 @@ func TestEntryPageRenderSelectedRow(t *testing.T) {
 	if !strings.Contains(body, "entry-view") {
 		t.Fatal("expected entry viewer markup")
 	}
+	if !strings.Contains(body, "btn-edit-tags-entry") {
+		t.Fatal("expected edit tags button")
+	}
+	if !strings.Contains(body, "btn-delete-entry") {
+		t.Fatal("expected delete button")
+	}
 }
 
 func TestUIEntryViewerPartial(t *testing.T) {
@@ -75,6 +81,12 @@ func TestUIEntryViewerPartial(t *testing.T) {
 	}
 	if !strings.Contains(body, "entry-view") {
 		t.Fatal("expected entry viewer partial")
+	}
+	if !strings.Contains(body, "btn-edit-tags-entry") {
+		t.Fatal("expected edit tags button")
+	}
+	if !strings.Contains(body, "btn-delete-entry") {
+		t.Fatal("expected delete button")
 	}
 }
 

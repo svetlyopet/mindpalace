@@ -93,7 +93,7 @@ func (l *Library) UpdateTags(_ context.Context, id string, add, remove []string)
 	if err != nil {
 		return nil, err
 	}
-	e.Tags = MergeTags(e.Tags, add, remove)
+	e.Tags = MergeTags(e.Tags, capture.NormalizeTags(add), capture.NormalizeTags(remove))
 	if err := l.Vault.Update(e); err != nil {
 		return nil, err
 	}

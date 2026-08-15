@@ -350,6 +350,46 @@ func TestAPIDeleteEntry(t *testing.T) {
 	}
 }
 
+func TestAPIUpdateTags(t *testing.T) {
+	s, token := testServer(t)
+	ts := httptest.NewServer(s.Handler())
+	defer ts.Close()
+
+	body, err := json.Marshal(map[string][]string{
+		"add":    {"Gamma", "Work Project"},
+		"remove": {"Beta"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	req, _ := http.NewRequest(http.MethodPost, ts.URL+"/api/entries/abc123/tags", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d body %s", resp.StatusCode, readBody(resp))
+	}
+	var out struct {
+		Tags []string `json:"tags"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"alpha", "gamma", "work-project"}
+	if len(out.Tags) != len(want) {
+		t.Fatalf("tags = %v, want %v", out.Tags, want)
+	}
+	for i := range want {
+		if out.Tags[i] != want[i] {
+			t.Fatalf("tags = %v, want %v", out.Tags, want)
+		}
+	}
+}
+
 func TestAPICaptureWithSessionCookie(t *testing.T) {
 	s, _ := testServer(t)
 	ts := httptest.NewServer(s.Handler())

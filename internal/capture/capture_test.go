@@ -90,6 +90,50 @@ func TestApplyTagsExplicitSkipsSuggest(t *testing.T) {
 	}
 }
 
+func TestNormalizeTags(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		in   []string
+		want []string
+	}{
+		{
+			name: "lowercase and spaces",
+			in:   []string{"Work Project"},
+			want: []string{"work-project"},
+		},
+		{
+			name: "punctuation stripped",
+			in:   []string{"Hello, World!"},
+			want: []string{"hello-world"},
+		},
+		{
+			name: "empties dropped",
+			in:   []string{"", "!!!", "  ", "ok"},
+			want: []string{"ok"},
+		},
+		{
+			name: "trim hyphens",
+			in:   []string{"-Foo-"},
+			want: []string{"foo"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := NormalizeTags(tt.in)
+			if len(got) != len(tt.want) {
+				t.Fatalf("NormalizeTags() = %v, want %v", got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Fatalf("NormalizeTags()[%d] = %q, want %q", i, got[i], tt.want[i])
+				}
+			}
+		})
+	}
+}
+
 func TestParseTagEditorText(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

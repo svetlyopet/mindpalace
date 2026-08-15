@@ -11,6 +11,25 @@
     return out;
   }
 
+  function normalizeTag(s) {
+    s = String(s || '').trim().toLowerCase();
+    s = s.replace(/ /g, '-');
+    s = s.replace(/[^a-z0-9-]/g, '');
+    return s.replace(/^-+|-+$/g, '');
+  }
+
+  function normalizeTags(list) {
+    const seen = {};
+    const out = [];
+    (list || []).forEach(function (part) {
+      const tag = normalizeTag(part);
+      if (!tag || seen[tag]) return;
+      seen[tag] = true;
+      out.push(tag);
+    });
+    return out;
+  }
+
   function renderTagSuggestions(suggestionsEl, tagsInput, suggested) {
     suggestionsEl.innerHTML = '';
     if (!suggested || !suggested.length) {
@@ -78,6 +97,8 @@
 
   global.MPCaptureTags = {
     parseTags: parseTags,
+    normalizeTag: normalizeTag,
+    normalizeTags: normalizeTags,
     renderTagSuggestions: renderTagSuggestions,
     createTagPromptState: createTagPromptState,
     resetTagPromptState: resetTagPromptState,

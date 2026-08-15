@@ -272,6 +272,9 @@ a { color: #2d3a8c; }
 }
 
 .entry-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
   flex-shrink: 0;
 }
 
@@ -350,6 +353,35 @@ a { color: #2d3a8c; }
 }
 
 .entry-tags { margin: 0.5rem 0 0; }
+.entry-tags:empty { display: none; }
+.entry-tags.is-editing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+.tag-remove {
+  margin-left: 0.2rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.95em;
+  line-height: 1;
+  opacity: 0.65;
+}
+.tag-remove:hover { opacity: 1; }
+.tag-editor-input {
+  border: none;
+  background: transparent;
+  min-width: 8ch;
+  width: 8ch;
+  font: inherit;
+  color: inherit;
+  padding: 0.12rem 0.2rem;
+  outline: none;
+}
 
 .entry-screenshot {
   margin: 1rem 0;

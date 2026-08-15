@@ -147,7 +147,7 @@ func (c *Capturer) File(ctx context.Context, path string, opts Options) (*Result
 func (c *Capturer) applyTags(ctx context.Context, e *vault.Entry, indexText string, opts Options) (*Result, error) {
 	res := &Result{Entry: e, Warnings: []string{}}
 	if opts.TagsExplicit {
-		e.Tags = normalizeTags(opts.Tags)
+		e.Tags = NormalizeTags(opts.Tags)
 		return res, nil
 	}
 	suggested, warns := c.suggestForIndex(ctx, e.Title, indexText)
@@ -158,10 +158,10 @@ func (c *Capturer) applyTags(ctx context.Context, e *vault.Entry, indexText stri
 		if err != nil {
 			return nil, err
 		}
-		e.Tags = normalizeTags(chosen)
+		e.Tags = NormalizeTags(chosen)
 		return res, nil
 	}
-	e.Tags = normalizeTags(opts.Tags)
+	e.Tags = NormalizeTags(opts.Tags)
 	return res, nil
 }
 
@@ -266,10 +266,12 @@ func ParseTagEditorText(text string) []string {
 		}
 		lines = append(lines, line)
 	}
-	return normalizeTags(lines)
+	return NormalizeTags(lines)
 }
 
-func normalizeTags(in []string) []string {
+// NormalizeTags lowercases, turns spaces into hyphens, strips non [a-z0-9-],
+// trims hyphens, and drops empty results.
+func NormalizeTags(in []string) []string {
 	var out []string
 	for _, t := range in {
 		if t = normalizeTag(t); t != "" {

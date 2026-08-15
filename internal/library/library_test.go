@@ -27,12 +27,18 @@ func TestMergeTags(t *testing.T) {
 func TestUpdateTags(t *testing.T) {
 	lib := testLibrary(t)
 	ctx := context.Background()
-	e, err := lib.UpdateTags(ctx, "abc123", []string{"gamma"}, []string{"beta"})
+	e, err := lib.UpdateTags(ctx, "abc123", []string{"Gamma", "Work Project"}, []string{"Beta"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(e.Tags) != 2 {
-		t.Fatalf("tags = %v", e.Tags)
+	want := []string{"alpha", "gamma", "work-project"}
+	if len(e.Tags) != len(want) {
+		t.Fatalf("tags = %v, want %v", e.Tags, want)
+	}
+	for i := range want {
+		if e.Tags[i] != want[i] {
+			t.Fatalf("tags = %v, want %v", e.Tags, want)
+		}
 	}
 }
 

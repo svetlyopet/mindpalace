@@ -25,13 +25,10 @@
         <span class="type-badge">{{.Entry.Type}}</span>
         {{if .SourceLinkHTML}}{{.SourceLinkHTML}}{{end}}
       </p>
-      {{if .Entry.Tags}}
-      <p class="entry-tags">
-        {{range .Entry.Tags}}<span class="tag"><a href="/?tag={{.}}">{{.}}</a></span>{{end}}
-      </p>
-      {{end}}
+      <p class="entry-tags">{{range .Entry.Tags}}<span class="tag"><a href="/?tag={{.}}">{{.}}</a></span>{{end}}</p>
     </div>
     <div class="entry-header-actions">
+      <button type="button" class="btn-secondary btn-edit-tags-entry" data-entry-id="{{.Entry.ID}}">Edit tags</button>
       <button type="button" class="btn-danger btn-delete-entry" data-entry-id="{{.Entry.ID}}" data-entry-title="{{.Entry.Title}}">Delete</button>
     </div>
   </header>

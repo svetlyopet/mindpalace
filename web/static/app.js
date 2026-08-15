@@ -657,10 +657,193 @@
     });
   });
 
+  let tagEditor = null;
+
+  function readTagChips(listEl) {
+    return Array.prototype.map.call(listEl.querySelectorAll('.tag'), function (el) {
+      return el.getAttribute('data-tag') || el.textContent.trim();
+    }).filter(Boolean);
+  }
+
+  function currentEditorTags() {
+    if (!tagEditor) return [];
+    return Array.prototype.map.call(tagEditor.listEl.querySelectorAll('.tag'), function (el) {
+      return el.getAttribute('data-tag');
+    }).filter(Boolean);
+  }
+
+  function addEditorChip(listEl, tag) {
+    if (currentEditorTags().indexOf(tag) !== -1) return;
+    const chip = document.createElement('span');
+    chip.className = 'tag';
+    chip.setAttribute('data-tag', tag);
+    chip.appendChild(document.createTextNode(tag));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'tag-remove';
+    remove.setAttribute('aria-label', 'Remove ' + tag);
+    remove.textContent = '\u00d7';
+    chip.appendChild(remove);
+    const input = listEl.querySelector('.tag-editor-input');
+    listEl.insertBefore(chip, input);
+  }
+
+  function commitTagInput(input) {
+    if (!tagEditor || !input) return;
+    tags.normalizeTags(String(input.value || '').split(',')).forEach(function (tag) {
+      addEditorChip(tagEditor.listEl, tag);
+    });
+    input.value = '';
+    input.style.width = '8ch';
+  }
+
+  function openTagEditor(article) {
+    if (tagEditor) {
+      closeTagEditor();
+    }
+    const listEl = article.querySelector('.entry-tags');
+    const actionsEl = article.querySelector('.entry-header-actions');
+    const editBtn = article.querySelector('.btn-edit-tags-entry');
+    if (!listEl || !actionsEl || !editBtn) return;
+    const original = readTagChips(listEl);
+    tagEditor = {
+      article: article,
+      id: editBtn.getAttribute('data-entry-id'),
+      original: original,
+      listEl: listEl,
+      actionsEl: actionsEl,
+      viewTagsHTML: listEl.innerHTML,
+      viewActionsHTML: actionsEl.innerHTML
+    };
+    listEl.classList.add('is-editing');
+    listEl.innerHTML = '';
+    original.forEach(function (tag) {
+      addEditorChip(listEl, tag);
+    });
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'tag-editor-input';
+    input.setAttribute('aria-label', 'Add tag');
+    input.autocomplete = 'off';
+    listEl.appendChild(input);
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn-secondary btn-cancel-tags-entry';
+    cancel.textContent = 'Cancel';
+    const save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'btn-primary btn-save-tags-entry';
+    save.textContent = 'Save';
+    const status = document.createElement('p');
+    status.className = 'msg tag-editor-status';
+    editBtn.replaceWith(cancel);
+    cancel.after(save);
+    save.after(status);
+    input.focus();
+  }
+
+  function closeTagEditor() {
+    if (!tagEditor) return;
+    tagEditor.listEl.classList.remove('is-editing');
+    tagEditor.listEl.innerHTML = tagEditor.viewTagsHTML;
+    tagEditor.actionsEl.innerHTML = tagEditor.viewActionsHTML;
+    tagEditor = null;
+  }
+
+  function tagDiff(original, current) {
+    const add = current.filter(function (t) { return original.indexOf(t) === -1; });
+    const remove = original.filter(function (t) { return current.indexOf(t) === -1; });
+    return { add: add, remove: remove };
+  }
+
+  function saveTagEditor() {
+    if (!tagEditor) return;
+    const input = tagEditor.listEl.querySelector('.tag-editor-input');
+    commitTagInput(input);
+    const diff = tagDiff(tagEditor.original, currentEditorTags());
+    if (diff.add.length === 0 && diff.remove.length === 0) {
+      closeTagEditor();
+      return;
+    }
+    const id = tagEditor.id;
+    const statusEl = tagEditor.actionsEl.querySelector('.tag-editor-status');
+    const saveBtn = tagEditor.actionsEl.querySelector('.btn-save-tags-entry');
+    if (statusEl) statusEl.textContent = 'Saving\u2026';
+    if (saveBtn) saveBtn.disabled = true;
+    fetch('/api/entries/' + encodeURIComponent(id) + '/tags', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ add: diff.add, remove: diff.remove })
+    }).then(async function (r) {
+      if (!r.ok) {
+        if (statusEl) statusEl.textContent = await r.text();
+        if (saveBtn) saveBtn.disabled = false;
+        return;
+      }
+      closeTagEditor();
+      navigateAfterLibraryChange('/entry/' + encodeURIComponent(id));
+    }).catch(function () {
+      if (statusEl) statusEl.textContent = 'Save failed.';
+      if (saveBtn) saveBtn.disabled = false;
+    });
+  }
+
+  document.body.addEventListener('click', function (e) {
+    const editBtn = e.target.closest('.btn-edit-tags-entry');
+    if (editBtn) {
+      const article = editBtn.closest('.entry-view');
+      if (article) openTagEditor(article);
+      return;
+    }
+    if (e.target.closest('.btn-cancel-tags-entry')) {
+      closeTagEditor();
+      return;
+    }
+    if (e.target.closest('.btn-save-tags-entry')) {
+      saveTagEditor();
+      return;
+    }
+    const removeBtn = e.target.closest('.tag-remove');
+    if (removeBtn && tagEditor && tagEditor.listEl.contains(removeBtn)) {
+      const chip = removeBtn.closest('.tag');
+      if (chip) chip.remove();
+    }
+  });
+
+  document.body.addEventListener('keydown', function (e) {
+    if (!tagEditor || !e.target.classList || !e.target.classList.contains('tag-editor-input')) return;
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      commitTagInput(e.target);
+      return;
+    }
+    if (e.key === 'Backspace' && e.target.value === '') {
+      e.preventDefault();
+      const chips = tagEditor.listEl.querySelectorAll('.tag');
+      if (chips.length) chips[chips.length - 1].remove();
+    }
+  });
+
+  document.body.addEventListener('input', function (e) {
+    if (!e.target.classList || !e.target.classList.contains('tag-editor-input')) return;
+    e.target.style.width = Math.max(8, e.target.value.length + 1) + 'ch';
+  });
+
+  document.body.addEventListener('focusout', function (e) {
+    if (!tagEditor || !e.target.classList || !e.target.classList.contains('tag-editor-input')) return;
+    commitTagInput(e.target);
+  });
+
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !deleteModal.hidden) {
       e.preventDefault();
       closeDeleteModal();
+      return;
+    }
+    if (e.key === 'Escape' && tagEditor) {
+      e.preventDefault();
+      closeTagEditor();
       return;
     }
     if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -691,6 +874,7 @@
   initEntryTabs(document);
   document.body.addEventListener('htmx:afterSwap', function (e) {
     if (e.detail.target && e.detail.target.id === 'viewer') {
+      tagEditor = null;
       initEntryTabs(e.detail.target);
     }
   });
