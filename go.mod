@@ -17,7 +17,7 @@ require (
 	golang.org/x/net v0.58.0
 	golang.org/x/term v0.45.0
 	golang.org/x/tools v0.49.0
-	golang.org/x/vuln v1.6.0
+	golang.org/x/vuln v1.7.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
