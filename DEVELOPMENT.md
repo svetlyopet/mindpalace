@@ -13,6 +13,8 @@ Contributor documentation for [Mindpalace](README.md). End-user setup and usage 
 
 ```bash
 make build          # bin/mp
+make install        # build and copy mp to /usr/local/bin (PREFIX=/usr for /usr/bin)
+make uninstall      # remove the installed mp
 make test           # go test ./...
 make test-race      # race detector
 make test-cover     # coverage summary

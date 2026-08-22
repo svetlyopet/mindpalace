@@ -2,6 +2,9 @@ GO   ?= go
 BIN  ?= bin/mp
 PKG  ?= ./cmd/mp
 SERVE_FLAGS ?=
+PREFIX  ?= /usr/local
+DESTDIR ?=
+BINDIR  ?= $(PREFIX)/bin
 
 GOSEC        ?= github.com/securego/gosec/v2/cmd/gosec
 GOSEC_ARGS   ?= -conf .gosec.json
@@ -10,7 +13,7 @@ SEMGREP       ?= semgrep
 SEMGREP_CONFIGS ?= --config p/golang --config p/security-audit
 SEMGREP_FLAGS ?=
 
-.PHONY: help setup-hooks fmt lint out build test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck semgrep
+.PHONY: help setup-hooks fmt lint out build install uninstall test test-race test-cover test-e2e serve clean vendor-htmx release gosec govulncheck semgrep
 
 help:
 	@echo "Mindpalace — common targets:"
@@ -18,6 +21,8 @@ help:
 	@echo "  make fmt            Format Go files with gofmt"
 	@echo "  make lint           Lint Go files"
 	@echo "  make build          Build $(BIN)"
+	@echo "  make install        Build and install mp to $(BINDIR)"
+	@echo "  make uninstall      Remove mp from $(BINDIR)"
 	@echo "  make test           Run go test ./..."
 	@echo "  make test-race      Run go test -race ./..."
 	@echo "  make test-cover     Run tests and print coverage summary"
@@ -32,6 +37,9 @@ help:
 	@echo ""
 	@echo "Overrides:"
 	@echo "  BIN=path            Output binary (default: bin/mp)"
+	@echo "  PREFIX=dir          Install prefix (default: /usr/local)"
+	@echo "  DESTDIR=dir         Staging root for packaging (default: empty)"
+	@echo "  BINDIR=dir          Install directory (default: \$$(PREFIX)/bin)"
 	@echo "  SERVE_FLAGS=...     Passed to mp serve (e.g. --open, --addr HOST:PORT)"
 	@echo ""
 	@echo "Chrome extension      Load unpacked: extension/ (see extension/README.md)"
@@ -51,6 +59,13 @@ out:
 
 build: out
 	$(GO) build -o $(BIN) $(PKG)
+
+install: build
+	install -d "$(DESTDIR)$(BINDIR)"
+	install -m 755 "$(BIN)" "$(DESTDIR)$(BINDIR)/$(notdir $(BIN))"
+
+uninstall:
+	rm -f "$(DESTDIR)$(BINDIR)/$(notdir $(BIN))"
 
 test:
 	$(GO) test ./...

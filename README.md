@@ -194,8 +194,11 @@ LLM-related settings exist for future features; the default backend is `none`.
 
 ```bash
 make build    # produces bin/mp
+make install  # build and copy mp to /usr/local/bin (use sudo if needed)
 make serve    # build and run mp serve
 make test     # run unit tests
 ```
+
+`make install PREFIX=/usr` installs to `/usr/bin` instead. `make uninstall` removes the installed binary.
 
 The Chrome extension is not built by Make; load `extension/` as an unpacked extension in Chrome (see linked README above).
