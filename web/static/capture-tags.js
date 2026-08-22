@@ -2,7 +2,7 @@
   function parseTags(raw) {
     const seen = {};
     const out = [];
-    raw.split(/[,\s]+/).forEach(function (part) {
+    String(raw || '').split(',').forEach(function (part) {
       part = part.trim();
       if (!part || seen[part]) return;
       seen[part] = true;
@@ -13,9 +13,9 @@
 
   function normalizeTag(s) {
     s = String(s || '').trim().toLowerCase();
-    s = s.replace(/ /g, '-');
-    s = s.replace(/[^a-z0-9-]/g, '');
-    return s.replace(/^-+|-+$/g, '');
+    s = s.replace(/[^a-z0-9 -]/g, '');
+    s = s.replace(/\s+/g, ' ').replace(/^[- ]+|[- ]+$/g, '');
+    return s;
   }
 
   function normalizeTags(list) {

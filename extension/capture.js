@@ -1,7 +1,7 @@
 function parseTags(raw) {
   const seen = {};
   const out = [];
-  raw.split(/[,\s]+/).forEach((part) => {
+  String(raw || "").split(",").forEach((part) => {
     part = part.trim();
     if (!part || seen[part]) return;
     seen[part] = true;

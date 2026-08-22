@@ -31,7 +31,7 @@ func TestUpdateTags(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"alpha", "gamma", "work-project"}
+	want := []string{"alpha", "gamma", "work project"}
 	if len(e.Tags) != len(want) {
 		t.Fatalf("tags = %v, want %v", e.Tags, want)
 	}

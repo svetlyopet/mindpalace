@@ -379,7 +379,7 @@ func TestAPIUpdateTags(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"alpha", "gamma", "work-project"}
+	want := []string{"alpha", "gamma", "work project"}
 	if len(out.Tags) != len(want) {
 		t.Fatalf("tags = %v, want %v", out.Tags, want)
 	}

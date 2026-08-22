@@ -100,12 +100,17 @@ func TestNormalizeTags(t *testing.T) {
 		{
 			name: "lowercase and spaces",
 			in:   []string{"Work Project"},
-			want: []string{"work-project"},
+			want: []string{"work project"},
 		},
 		{
 			name: "punctuation stripped",
 			in:   []string{"Hello, World!"},
-			want: []string{"hello-world"},
+			want: []string{"hello world"},
+		},
+		{
+			name: "collapse whitespace",
+			in:   []string{"hello   world"},
+			want: []string{"hello world"},
 		},
 		{
 			name: "empties dropped",
@@ -149,12 +154,17 @@ func TestParseTagEditorText(t *testing.T) {
 		{
 			name: "normalize",
 			in:   "Foo Bar\nUPPER\n",
-			want: []string{"foo-bar", "upper"},
+			want: []string{"foo bar", "upper"},
 		},
 		{
 			name: "empty",
 			in:   "# only comments\n",
 			want: nil,
+		},
+		{
+			name: "comma-separated on one line",
+			in:   "# Tags for this note (one per line or comma-separated). Lines starting with # are ignored.\n\n# Suggested: test, multi-word tag\n\ntest, multi-word tag\n",
+			want: []string{"test", "multi-word tag"},
 		},
 	}
 	for _, tt := range tests {
@@ -189,6 +199,69 @@ func TestParseTitleEditorText(t *testing.T) {
 			t.Parallel()
 			if got := ParseTitleEditorText(tt.in); got != tt.want {
 				t.Fatalf("ParseTitleEditorText() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNoteTagsWithAndWithoutWhitespace(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		tags []string
+		want []string
+	}{
+		{
+			name: "without whitespace",
+			tags: []string{"ideas"},
+			want: []string{"ideas"},
+		},
+		{
+			name: "with whitespace",
+			tags: []string{"whitespace tag"},
+			want: []string{"whitespace tag"},
+		},
+		{
+			name: "mixed",
+			tags: []string{"ideas", "Work Project"},
+			want: []string{"ideas", "work project"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			v, err := vault.Init(t.TempDir())
+			if err != nil {
+				t.Fatal(err)
+			}
+			c := New(v, stubTagger{}, config.Default().Capture)
+			res, err := c.Note(context.Background(), "note body", Options{
+				Title:        "T",
+				Tags:         tt.tags,
+				TagsExplicit: true,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(res.Entry.Tags) != len(tt.want) {
+				t.Fatalf("tags = %v, want %v", res.Entry.Tags, tt.want)
+			}
+			for i := range tt.want {
+				if res.Entry.Tags[i] != tt.want[i] {
+					t.Fatalf("tags = %v, want %v", res.Entry.Tags, tt.want)
+				}
+			}
+			got, err := v.Get(res.Entry.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(got.Tags) != len(tt.want) {
+				t.Fatalf("stored tags = %v, want %v", got.Tags, tt.want)
+			}
+			for i := range tt.want {
+				if got.Tags[i] != tt.want[i] {
+					t.Fatalf("stored tags = %v, want %v", got.Tags, tt.want)
+				}
 			}
 		})
 	}

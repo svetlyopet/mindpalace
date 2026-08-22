@@ -4,7 +4,7 @@
   <h1>Tags</h1>
   <div class="tag-cloud">
   {{range .TagCounts}}
-    <span class="tag tag-lg"><a href="/?tag={{.Tag}}">{{.Tag}}</a> <span class="tag-count">{{.Count}}</span></span>
+    <span class="tag tag-lg"><a href="/?tag={{.Tag | urlquery}}">{{.Tag}}</a> <span class="tag-count">{{.Count}}</span></span>
   {{else}}
     <p class="msg">No tags yet.</p>
   {{end}}

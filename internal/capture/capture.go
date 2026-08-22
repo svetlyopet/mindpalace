@@ -258,19 +258,24 @@ func ParseTitleEditorText(text string) string {
 
 // ParseTagEditorText parses tag editor buffer text: skips blank lines and lines starting with #.
 func ParseTagEditorText(text string) []string {
-	var lines []string
+	var parts []string
 	for _, line := range strings.Split(text, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		lines = append(lines, line)
+		for _, p := range strings.Split(line, ",") {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				parts = append(parts, p)
+			}
+		}
 	}
-	return NormalizeTags(lines)
+	return NormalizeTags(parts)
 }
 
-// NormalizeTags lowercases, turns spaces into hyphens, strips non [a-z0-9-],
-// trims hyphens, and drops empty results.
+// NormalizeTags lowercases, collapses whitespace, strips non [a-z0-9 -],
+// trims hyphens and spaces, and drops empty results.
 func NormalizeTags(in []string) []string {
 	var out []string
 	for _, t := range in {
@@ -283,10 +288,10 @@ func NormalizeTags(in []string) []string {
 
 func normalizeTag(s string) string {
 	s = strings.ToLower(strings.TrimSpace(s))
-	s = strings.ReplaceAll(s, " ", "-")
-	re := regexp.MustCompile(`[^a-z0-9-]`)
+	re := regexp.MustCompile(`[^a-z0-9 -]`)
 	s = re.ReplaceAllString(s, "")
-	s = strings.Trim(s, "-")
+	s = strings.Join(strings.Fields(s), " ")
+	s = strings.Trim(s, "- ")
 	return s
 }
 

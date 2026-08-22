@@ -350,7 +350,7 @@ func noteBody(rt *clictx.Runtime) (string, bool, error) {
 	return string(b), true, nil
 }
 
-const tagEditorHeader = `# Tags for this note (one per line). Lines starting with # are ignored.
+const tagEditorHeader = `# Tags for this note (one per line or comma-separated). Lines starting with # are ignored.
 
 `
 
