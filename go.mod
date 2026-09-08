@@ -12,8 +12,8 @@ require (
 	github.com/golangci/golangci-lint/v2 v2.13.2
 	github.com/securego/gosec/v2 v2.29.0
 	github.com/spf13/cobra v1.10.2
-	github.com/yuin/goldmark v1.8.5
-	golang.org/x/crypto v0.55.0
+	github.com/yuin/goldmark v1.8.6
+	golang.org/x/crypto v0.56.0
 	golang.org/x/net v0.58.0
 	golang.org/x/term v0.45.0
 	golang.org/x/tools v0.49.0
