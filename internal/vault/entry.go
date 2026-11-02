@@ -92,7 +92,7 @@ func parseEntryMarkdown(data []byte, dir string, c *Cipher) (*Entry, error) {
 		if c == nil {
 			return nil, ErrLocked
 		}
-		plain, err := c.Decrypt(bodyBytes)
+		plain, err := decryptMarkdownBlob(c, bodyBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -103,6 +103,21 @@ func parseEntryMarkdown(data []byte, dir string, c *Cipher) (*Entry, error) {
 
 func isEncryptedBlob(b []byte) bool {
 	return len(b) >= len(encMagic) && string(b[:len(encMagic)]) == encMagic
+}
+
+// decryptMarkdownBlob opens an encrypted entry body. Editors that save entry.md
+// append one trailing newline after the binary ciphertext; that byte is not
+// part of the GCM payload, so authentication is retried without it.
+func decryptMarkdownBlob(c *Cipher, blob []byte) ([]byte, error) {
+	plain, err := c.Decrypt(blob)
+	if err == nil || len(blob) == 0 || blob[len(blob)-1] != '\n' {
+		return plain, err
+	}
+	plain, err2 := c.Decrypt(blob[:len(blob)-1])
+	if err2 != nil {
+		return nil, err
+	}
+	return plain, nil
 }
 
 func WriteEntry(dir string, e *Entry, c *Cipher) error {
