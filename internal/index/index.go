@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +21,7 @@ import (
 	"github.com/blevesearch/bleve/v2/search/query"
 )
 
-const mappingVersion = "2"
+const mappingVersion = "3"
 
 type EntryMeta struct {
 	ID      string     `json:"id"`
@@ -328,13 +329,11 @@ func domainFromSource(source string) string {
 	if source == "" {
 		return ""
 	}
-	if i := strings.Index(source, "://"); i >= 0 {
-		source = source[i+3:]
+	u, err := url.Parse(source)
+	if err != nil || u.Hostname() == "" {
+		return strings.ToLower(strings.TrimPrefix(source, "www."))
 	}
-	if i := strings.IndexAny(source, "/?#"); i >= 0 {
-		source = source[:i]
-	}
-	return strings.ToLower(strings.TrimPrefix(source, "www."))
+	return strings.ToLower(strings.TrimPrefix(u.Hostname(), "www."))
 }
 
 // MatchAll builds a conjunction query for Bleve filters.

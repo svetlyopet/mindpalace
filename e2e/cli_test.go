@@ -3,11 +3,7 @@
 package e2e_test
 
 import (
-	"bytes"
 	"encoding/json"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -15,30 +11,8 @@ import (
 	"github.com/svetlyopet/mindpalace/internal/testenv"
 )
 
-func runMP(t *testing.T, vaultDir string, extraEnv []string, stdin string, args ...string) (stdout, stderr string, exitCode int) {
-	t.Helper()
-	allArgs := append([]string{"--vault", vaultDir}, args...)
-	cmd := exec.Command(mpBin, allArgs...)
-	cmd.Env = append(os.Environ(), extraEnv...)
-	if stdin != "" {
-		cmd.Stdin = strings.NewReader(stdin)
-	}
-	var outBuf, errBuf bytes.Buffer
-	cmd.Stdout = &outBuf
-	cmd.Stderr = &errBuf
-	err := cmd.Run()
-	code := 0
-	if err != nil {
-		if ee, ok := err.(*exec.ExitError); ok {
-			code = ee.ExitCode()
-		} else {
-			t.Fatal(err)
-		}
-	}
-	return outBuf.String(), errBuf.String(), code
-}
-
 func TestCLIHappyPath(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	if out, errOut, code := runMP(t, dir, nil, "", "vault", "init", dir); code != 0 {
 		t.Fatalf("init code=%d out=%q err=%q", code, out, errOut)
@@ -106,6 +80,7 @@ func TestCLIHappyPath(t *testing.T) {
 }
 
 func TestCLIEncryptedVault(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	if _, errOut, code := runMP(t, dir, nil, "", "vault", "init", dir); code != 0 {
 		t.Fatalf("init: %q", errOut)
@@ -115,6 +90,10 @@ func TestCLIEncryptedVault(t *testing.T) {
 	}
 	// mp vault encrypt requires a TTY; encrypt in-process then exercise CLI unlock via env.
 	testenv.EncryptVaultAt(t, dir, "secret")
+	_, errOut, code := runMP(t, dir, nil, "", "--json", "search", "Enc")
+	if code == 0 {
+		t.Fatal("expected locked vault to reject search without a password")
+	}
 	out, errOut, code := runMP(t, dir, []string{"MINDPALACE_PASSWORD=secret"}, "", "--json", "search", "Enc")
 	if code != 0 {
 		t.Fatalf("search locked unlock via env code=%d err=%q", code, errOut)
@@ -129,6 +108,7 @@ func TestCLIEncryptedVault(t *testing.T) {
 }
 
 func TestCLIFailures(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	_, errOut, code := runMP(t, dir, nil, "", "search", "x")
 	if code == 0 {
@@ -143,8 +123,4 @@ func TestCLIFailures(t *testing.T) {
 	if code == 0 {
 		t.Fatal("expected failure deleting missing entry")
 	}
-}
-
-func init() {
-	_ = filepath.Separator
 }

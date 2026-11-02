@@ -26,7 +26,7 @@ help:
 	@echo "  make test           Run go test ./..."
 	@echo "  make test-race      Run go test -race ./..."
 	@echo "  make test-cover     Run tests and print coverage summary"
-	@echo "  make test-e2e       Build mp and run CLI subprocess E2E (separate from test)"
+	@echo "  make test-e2e       Build mp and run CLI and API subprocess E2E (separate from test)"
 	@echo "  make release        GoReleaser snapshot to dist/ (local only; needs syft for SBOMs)"
 	@echo "  make gosec          Run gosec (pinned in go.mod)"
 	@echo "  make semgrep        Run Semgrep (p/golang, p/security-audit; needs semgrep on PATH)"

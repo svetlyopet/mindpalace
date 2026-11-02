@@ -18,7 +18,7 @@ make uninstall      # remove the installed mp
 make test           # go test ./...
 make test-race      # race detector
 make test-cover     # coverage summary
-make test-e2e       # CLI subprocess E2E (builds mp first)
+make test-e2e       # CLI and API subprocess E2E (builds mp first)
 ```
 
 These mirror what CI runs (see below). Run `make help` for all targets.

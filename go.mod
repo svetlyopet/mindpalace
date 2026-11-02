@@ -8,6 +8,7 @@ require (
 	github.com/adrg/frontmatter v0.2.0
 	github.com/blevesearch/bleve/v2 v2.6.1
 	github.com/charmbracelet/glamour v1.0.0
+	github.com/creack/pty v1.1.24
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/golangci/golangci-lint/v2 v2.15.0
 	github.com/securego/gosec/v2 v2.30.0

@@ -32,12 +32,9 @@ func New(lib *library.Library, cfg *config.Config, token string) *Server {
 }
 
 func (s *Server) Run(ctx context.Context, addr string) error {
-	mux := http.NewServeMux()
-	s.registerRoutes(mux)
-
 	s.httpServer = &http.Server{
 		Addr:              addr,
-		Handler:           mux,
+		Handler:           s.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -73,5 +70,13 @@ func (s *Server) Run(ctx context.Context, addr string) error {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	s.registerRoutes(mux)
-	return mux
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Method-specific patterns never dispatch OPTIONS, so preflight is handled here.
+		if r.Method == http.MethodOptions {
+			s.setCORS(w, r)
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		mux.ServeHTTP(w, r)
+	})
 }
