@@ -131,8 +131,9 @@ func (l *Library) CommitCapture(_ context.Context, res *capture.Result) error {
 }
 
 type EntryFile struct {
-	Rel  string
-	Data []byte
+	Rel          string
+	Data         []byte
+	AllowScripts bool
 }
 
 func (l *Library) ReadEntryFile(id, rel string) (EntryFile, error) {
@@ -154,6 +155,7 @@ func (l *Library) ReadEntryFile(id, rel string) (EntryFile, error) {
 	}
 	out.Rel = clean
 	out.Data = data
+	out.AllowScripts = e.AllowsScripts()
 	return out, nil
 }
 
@@ -171,12 +173,13 @@ func safeEntryPath(entryDir, rel string) (clean, abs string, err error) {
 }
 
 // CaptureOptionsFromFields builds capture.Options shared by CLI and HTTP adapters.
-func CaptureOptionsFromFields(title string, tags []string, tagsExplicit bool, typ vault.Type, fullHTML bool, thoughts string) capture.Options {
+func CaptureOptionsFromFields(title string, tags []string, tagsExplicit bool, typ vault.Type, fullHTML bool, thoughts string, allowScripts bool) capture.Options {
 	opts := capture.Options{
 		Title:        title,
 		Tags:         tags,
 		TagsExplicit: tagsExplicit,
 		FullHTML:     fullHTML,
+		AllowScripts: allowScripts,
 		Thoughts:     strings.TrimSpace(thoughts),
 	}
 	if typ != "" {

@@ -101,6 +101,35 @@ func parseEntryMarkdown(data []byte, dir string, c *Cipher) (*Entry, error) {
 	return e, nil
 }
 
+const extraAllowScripts = "allow_scripts"
+
+// AllowsScripts reports whether this entry was captured with JavaScript kept.
+func (e *Entry) AllowsScripts() bool {
+	if e == nil || e.Extra == nil {
+		return false
+	}
+	return yamlBool(e.Extra[extraAllowScripts])
+}
+
+// MarkAllowScripts records that JavaScript was kept for this capture.
+func (e *Entry) MarkAllowScripts() {
+	if e.Extra == nil {
+		e.Extra = map[string]any{}
+	}
+	e.Extra[extraAllowScripts] = true
+}
+
+func yamlBool(v any) bool {
+	switch t := v.(type) {
+	case bool:
+		return t
+	case string:
+		return strings.EqualFold(strings.TrimSpace(t), "true")
+	default:
+		return false
+	}
+}
+
 func isEncryptedBlob(b []byte) bool {
 	return len(b) >= len(encMagic) && string(b[:len(encMagic)]) == encMagic
 }

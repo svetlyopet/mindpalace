@@ -13,7 +13,7 @@ func TestSanitizeBundleHTML_removesScriptAndHandlers(t *testing.T) {
 <iframe src="/frame"></iframe>
 <link rel="modulepreload" href="/chunk.js">
 </body></html>`
-	out, warns := SanitizeBundleHTML([]byte(raw))
+	out, warns := SanitizeBundleHTML([]byte(raw), false)
 	if len(out) == 0 {
 		t.Fatal("expected sanitized output")
 	}
@@ -35,6 +35,28 @@ func TestSanitizeBundleHTML_removesScriptAndHandlers(t *testing.T) {
 	}
 	if len(warns) == 0 {
 		t.Fatal("expected sanitize warnings")
+	}
+}
+
+func TestSanitizeBundleHTML_allowScriptsKeepsVectors(t *testing.T) {
+	raw := `<!DOCTYPE html><html><head><script>alert(1)</script>
+<script src="/app.js"></script></head><body>
+<img src="/x.png" onerror="alert(2)">
+<a href="javascript:alert(3)">x</a>
+</body></html>`
+	out, warns := SanitizeBundleHTML([]byte(raw), true)
+	s := string(out)
+	if !strings.Contains(strings.ToLower(s), "<script") {
+		t.Fatalf("script removed: %s", s)
+	}
+	if !strings.Contains(s, "onerror") {
+		t.Fatalf("onerror removed: %s", s)
+	}
+	if !strings.Contains(s, "javascript:") {
+		t.Fatalf("javascript URL removed: %s", s)
+	}
+	if len(warns) != 0 {
+		t.Fatalf("warnings = %v", warns)
 	}
 }
 

@@ -53,7 +53,8 @@ func (c *Capturer) buildSocialResult(ctx context.Context, link string, opts Opti
 		}
 		return nil, nil
 	}
-	post, err := social.Fetch(ctx, c.client, plat, canon)
+	includeScript := c.allowsScripts(opts)
+	post, err := social.Fetch(ctx, c.client, plat, canon, includeScript)
 	if err != nil {
 		if strict {
 			return nil, fmt.Errorf("social oembed: %w", err)
@@ -73,6 +74,9 @@ func (c *Capturer) buildSocialResult(ctx context.Context, link string, opts Opti
 }
 
 func (c *Capturer) persistSocialResult(ctx context.Context, socialRes *socialBuildResult, opts Options) (*Result, error) {
+	if c.allowsScripts(opts) {
+		socialRes.entry.MarkAllowScripts()
+	}
 	res, err := c.applyTags(ctx, socialRes.entry, socialRes.plain, opts)
 	if err != nil {
 		return nil, err

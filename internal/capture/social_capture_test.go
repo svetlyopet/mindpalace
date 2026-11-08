@@ -84,6 +84,92 @@ func TestSocial_success(t *testing.T) {
 	if !strings.Contains(res.Entry.Body, "## Thoughts") || !strings.Contains(res.Entry.Body, "worth revisiting") {
 		t.Fatalf("body = %q", res.Entry.Body)
 	}
+	if _, err := os.Stat(filepath.Join(res.Entry.Dir, "embed.html")); !os.IsNotExist(err) {
+		t.Fatalf("embed.html should be absent, stat err = %v", err)
+	}
+	if res.Entry.AllowsScripts() {
+		t.Fatal("scripts should stay blocked")
+	}
+}
+
+func TestAllowsScripts(t *testing.T) {
+	t.Parallel()
+	cfg := config.Default().Capture
+	c := New(nil, nil, cfg)
+	if c.allowsScripts(Options{}) {
+		t.Fatal("default should block scripts")
+	}
+	if !c.allowsScripts(Options{AllowScripts: true}) {
+		t.Fatal("option should allow scripts")
+	}
+	cfg.AllowScripts = true
+	c = New(nil, nil, cfg)
+	if !c.allowsScripts(Options{}) {
+		t.Fatal("config should allow scripts")
+	}
+}
+
+func TestSocial_allowScriptsWritesEmbed(t *testing.T) {
+	t.Parallel()
+	const htmlBody = `<blockquote class="twitter-tweet"><p>Hello from the oEmbed test post about golang.</p></blockquote><script async src="https://platform.twitter.com/widgets.js"></script>`
+	oembedSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"html":        htmlBody,
+			"author_name": "Author",
+			"author_url":  "https://x.com/testauthor",
+		})
+	}))
+	defer oembedSrv.Close()
+
+	var gotURL string
+	v, err := vault.Init(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := config.Default().Capture
+	cfg.SocialOEmbed = true
+	c := New(v, KeywordTagger{}, cfg)
+	c.client = &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if strings.Contains(req.URL.Host, "publish.twitter.com") {
+			gotURL = req.URL.String()
+			req2, err := http.NewRequestWithContext(req.Context(), req.Method, oembedSrv.URL, nil)
+			if err != nil {
+				return nil, err
+			}
+			return http.DefaultTransport.RoundTrip(req2)
+		}
+		return http.DefaultTransport.RoundTrip(req)
+	})}
+
+	res, err := c.Social(context.Background(), "https://x.com/u/status/463440424141459456", Options{
+		Title:        "My Title",
+		Tags:         []string{"social"},
+		TagsExplicit: true,
+		AllowScripts: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(gotURL, "omit_script") {
+		t.Fatalf("url = %q", gotURL)
+	}
+	if !res.Entry.AllowsScripts() {
+		t.Fatal("entry should allow scripts")
+	}
+	data, err := os.ReadFile(filepath.Join(res.Entry.Dir, "embed.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "<script") {
+		t.Fatalf("embed.html = %s", data)
+	}
+	saved, err := vault.ReadEntry(res.Entry.Dir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !saved.AllowsScripts() {
+		t.Fatal("frontmatter lost allow_scripts")
+	}
 }
 
 func TestPreviewSocial(t *testing.T) {

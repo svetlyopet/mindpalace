@@ -19,6 +19,7 @@ type Post struct {
 	Images       []MediaRef
 	Videos       []VideoRef
 	Thoughts     string // user-provided commentary
+	EmbedHTML    string // raw oEmbed HTML, set only when scripts are kept
 }
 
 // MediaRef is a remote image to download into assets/.

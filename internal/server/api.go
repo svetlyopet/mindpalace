@@ -81,15 +81,16 @@ func (s *Server) apiDeleteEntry(w http.ResponseWriter, r *http.Request, id strin
 }
 
 type captureReq struct {
-	Kind     string    `json:"kind"`
-	Text     string    `json:"text"`
-	URL      string    `json:"url"`
-	HTML     string    `json:"html"`
-	Title    string    `json:"title"`
-	Tags     *[]string `json:"tags"`
-	Type     string    `json:"type"`
-	Full     bool      `json:"full"`
-	Thoughts string    `json:"thoughts"`
+	Kind         string    `json:"kind"`
+	Text         string    `json:"text"`
+	URL          string    `json:"url"`
+	HTML         string    `json:"html"`
+	Title        string    `json:"title"`
+	Tags         *[]string `json:"tags"`
+	Type         string    `json:"type"`
+	Full         bool      `json:"full"`
+	AllowScripts bool      `json:"allow_scripts"`
+	Thoughts     string    `json:"thoughts"`
 }
 
 func captureOptionsFromReq(req captureReq) capture.Options {
@@ -99,7 +100,7 @@ func captureOptionsFromReq(req captureReq) capture.Options {
 		tags = *req.Tags
 	}
 	typ := vault.Type(req.Type)
-	return library.CaptureOptionsFromFields(req.Title, tags, tagsExplicit, typ, req.Full, req.Thoughts)
+	return library.CaptureOptionsFromFields(req.Title, tags, tagsExplicit, typ, req.Full, req.Thoughts, req.AllowScripts)
 }
 
 func (s *Server) apiCapturePreview(w http.ResponseWriter, r *http.Request) {
@@ -206,5 +207,5 @@ func (s *Server) apiServeFile(w http.ResponseWriter, r *http.Request, id, rel st
 		http.NotFound(w, r)
 		return
 	}
-	writeEntryFile(w, r, f.Rel, f.Data)
+	writeEntryFile(w, r, f.Rel, f.Data, f.AllowScripts)
 }

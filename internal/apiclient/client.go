@@ -88,15 +88,16 @@ func ProbeSession(addr string) ProbeStatus {
 }
 
 type CaptureReq struct {
-	Kind     string    `json:"kind"`
-	Text     string    `json:"text,omitempty"`
-	URL      string    `json:"url,omitempty"`
-	HTML     string    `json:"html,omitempty"`
-	Title    string    `json:"title,omitempty"`
-	Tags     *[]string `json:"tags,omitempty"`
-	Type     string    `json:"type,omitempty"`
-	Full     bool      `json:"full,omitempty"`
-	Thoughts string    `json:"thoughts,omitempty"`
+	Kind         string    `json:"kind"`
+	Text         string    `json:"text,omitempty"`
+	URL          string    `json:"url,omitempty"`
+	HTML         string    `json:"html,omitempty"`
+	Title        string    `json:"title,omitempty"`
+	Tags         *[]string `json:"tags,omitempty"`
+	Type         string    `json:"type,omitempty"`
+	Full         bool      `json:"full,omitempty"`
+	AllowScripts bool      `json:"allow_scripts,omitempty"`
+	Thoughts     string    `json:"thoughts,omitempty"`
 }
 
 type CapturePreview struct {

@@ -1,6 +1,7 @@
 const baseUrlEl = document.getElementById("baseUrl");
 const tokenEl = document.getElementById("token");
 const defaultFullHtmlEl = document.getElementById("defaultFullHtml");
+const defaultAllowScriptsEl = document.getElementById("defaultAllowScripts");
 const statusEl = document.getElementById("status");
 const toggleTokenBtn = document.getElementById("toggle-token");
 
@@ -18,13 +19,15 @@ function readConfig() {
     baseUrl: normalizeBaseUrl(baseUrlEl.value),
     token: tokenEl.value.trim(),
     defaultFullHtml: defaultFullHtmlEl.checked,
+    defaultAllowScripts: defaultAllowScriptsEl.checked,
   };
 }
 
-chrome.storage.sync.get(["baseUrl", "token", "defaultFullHtml"], (v) => {
+chrome.storage.sync.get(["baseUrl", "token", "defaultFullHtml", "defaultAllowScripts"], (v) => {
   baseUrlEl.value = v.baseUrl || "http://127.0.0.1:7451";
   tokenEl.value = v.token || "";
   defaultFullHtmlEl.checked = !!v.defaultFullHtml;
+  defaultAllowScriptsEl.checked = !!v.defaultAllowScripts;
 });
 
 toggleTokenBtn.addEventListener("click", () => {
@@ -35,7 +38,7 @@ toggleTokenBtn.addEventListener("click", () => {
 });
 
 document.getElementById("save").addEventListener("click", () => {
-  const { baseUrl, token, defaultFullHtml } = readConfig();
+  const { baseUrl, token, defaultFullHtml, defaultAllowScripts } = readConfig();
   if (!baseUrl) {
     setStatus("Enter a server URL.", "err");
     return;
@@ -44,7 +47,7 @@ document.getElementById("save").addEventListener("click", () => {
     setStatus("Enter the API token from config.yaml.", "err");
     return;
   }
-  chrome.storage.sync.set({ baseUrl, token, defaultFullHtml }, () => {
+  chrome.storage.sync.set({ baseUrl, token, defaultFullHtml, defaultAllowScripts }, () => {
     setStatus("Saved.", "ok");
   });
 });

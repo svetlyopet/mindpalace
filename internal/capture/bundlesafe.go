@@ -15,14 +15,17 @@ var (
 )
 
 // SanitizeBundleHTML strips script execution vectors while preserving page markup.
-func SanitizeBundleHTML(raw []byte) ([]byte, []string) {
+// allowScripts keeps script elements, event handlers, and javascript: URLs.
+func SanitizeBundleHTML(raw []byte, allowScripts bool) ([]byte, []string) {
 	var warnings []string
 	doc, err := html.Parse(bytes.NewReader(raw))
 	if err != nil {
 		return nil, append(warnings, "html bundle: sanitize parse failed: "+err.Error())
 	}
 
-	warnings = append(warnings, stripScriptVectors(doc)...)
+	if !allowScripts {
+		warnings = append(warnings, stripScriptVectors(doc)...)
+	}
 
 	var buf bytes.Buffer
 	if err := html.Render(&buf, doc); err != nil {

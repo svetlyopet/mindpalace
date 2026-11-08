@@ -4,8 +4,12 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/svetlyopet/mindpalace/internal/vault"
 )
 
 func noRedirectClient() *http.Client {
@@ -25,7 +29,7 @@ func TestLibraryPageRender(t *testing.T) {
 		t.Fatalf("status=%d body=%q", w.Code, w.Body.String())
 	}
 	body := w.Body.String()
-	for _, want := range []string{"Mindpalace", "id=\"viewer\"", "id=\"global-search\"", "id=\"entry-list\"", "viewer-empty", "note-modal", "url-modal", "file-modal", "note-title", "note-tags", "url-panel-toggle", "file-panel-toggle", "resize-handle", "/static/app.js", "/static/capture-tags.js"} {
+	for _, want := range []string{"Mindpalace", "id=\"viewer\"", "id=\"global-search\"", "id=\"entry-list\"", "viewer-empty", "note-modal", "url-modal", "file-modal", "note-title", "note-tags", "url-panel-toggle", "file-panel-toggle", "url-allow-scripts", "social-allow-scripts", "resize-handle", "/static/app.js", "/static/capture-tags.js"} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("expected %q in library page HTML", want)
 		}
@@ -88,6 +92,62 @@ func TestUIEntryViewerPartial(t *testing.T) {
 	if !strings.Contains(body, "btn-delete-entry") {
 		t.Fatal("expected delete button")
 	}
+}
+
+func TestEntryViewerSandbox(t *testing.T) {
+	s, _ := testServer(t)
+	ts := httptest.NewServer(s.Handler())
+	defer ts.Close()
+
+	e, err := s.lib.Vault.Get("abc123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(e.Dir, "source.html"), []byte("<html><body>safe</body></html>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	blocked := viewerHTML(t, ts.URL+"/ui/entry/abc123")
+	if !strings.Contains(blocked, `sandbox=""`) {
+		t.Fatalf("blocked viewer = %s", blocked)
+	}
+	if strings.Contains(blocked, "allow-scripts") {
+		t.Fatalf("blocked viewer allows scripts: %s", blocked)
+	}
+
+	e.MarkAllowScripts()
+	if err := vault.WriteEntry(e.Dir, e, s.lib.Vault.Cipher()); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(e.Dir, "embed.html"), []byte("<html><body>embed</body></html>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	allowed := viewerHTML(t, ts.URL+"/ui/entry/abc123")
+	if !strings.Contains(allowed, `sandbox="allow-scripts"`) {
+		t.Fatalf("allowed viewer = %s", allowed)
+	}
+	if strings.Contains(allowed, "allow-same-origin") || strings.Contains(allowed, "allow-top-navigation") {
+		t.Fatalf("sandbox is too open: %s", allowed)
+	}
+	if !strings.Contains(allowed, "/file/embed.html") {
+		t.Fatalf("embed iframe missing: %s", allowed)
+	}
+}
+
+func viewerHTML(t *testing.T, rawURL string) string {
+	t.Helper()
+	resp, err := http.Get(rawURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d", resp.StatusCode)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(body)
 }
 
 func TestMissingEntryPageRedirectsHome(t *testing.T) {

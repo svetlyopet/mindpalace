@@ -74,7 +74,7 @@ func (s *Server) handleUIEntryFile(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	writeEntryFile(w, r, f.Rel, f.Data)
+	writeEntryFile(w, r, f.Rel, f.Data, f.AllowScripts)
 }
 
 type entryViewerData struct {
@@ -82,6 +82,8 @@ type entryViewerData struct {
 	BodyHTML        template.HTML
 	ScreenshotURL   string
 	HasSourceHTML   bool
+	HasEmbedHTML    bool
+	FrameSandbox    string
 	ShowNoteTab     bool
 	DefaultTabPage  bool
 	SourceLinkHTML  template.HTML
@@ -194,17 +196,29 @@ func (s *Server) handleTagsPage(w http.ResponseWriter, r *http.Request) {
 	s.renderLayout(w, r, []string{"tags.html"}, data)
 }
 
+// frameSandboxAttr lets a saved document run scripts without making them the vault origin.
+// allow-same-origin and allow-top-navigation are omitted on purpose.
+func frameSandboxAttr(allowScripts bool) string {
+	if !allowScripts {
+		return ""
+	}
+	return "allow-scripts"
+}
+
 func (s *Server) buildEntryViewerData(e *vault.Entry) (entryViewerData, error) {
 	bodyHTML, err := renderMarkdownHTML(e.Body)
 	if err != nil {
 		return entryViewerData{}, err
 	}
 	hasSource := fileExists(filepath.Join(e.Dir, "source.html"))
+	hasEmbed := fileExists(filepath.Join(e.Dir, "embed.html"))
 	showNote := strings.TrimSpace(e.Body) != ""
 	data := entryViewerData{
 		Entry:          e,
 		BodyHTML:       template.HTML(bodyHTML),
 		HasSourceHTML:  hasSource,
+		HasEmbedHTML:   hasEmbed,
+		FrameSandbox:   frameSandboxAttr(e.AllowsScripts()),
 		ShowNoteTab:    showNote,
 		DefaultTabPage: hasSource,
 	}

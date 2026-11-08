@@ -47,6 +47,7 @@ func (c LLMConfig) APIKey() string {
 type CaptureConfig struct {
 	AutoTag      bool   `yaml:"auto_tag"`
 	FullHTML     bool   `yaml:"full_html"`
+	AllowScripts bool   `yaml:"allow_scripts"`
 	OCR          string `yaml:"ocr"`
 	SocialOEmbed bool   `yaml:"social_oembed"`
 }
@@ -62,6 +63,7 @@ func Default() *Config {
 		Capture: CaptureConfig{
 			AutoTag:      true,
 			FullHTML:     false,
+			AllowScripts: false,
 			OCR:          "auto",
 			SocialOEmbed: true,
 		},

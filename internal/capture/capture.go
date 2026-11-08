@@ -35,6 +35,7 @@ type Options struct {
 	Prompter     TagPrompter
 	Type         vault.Type
 	FullHTML     bool
+	AllowScripts bool
 	Thoughts     string // optional user commentary (ignored for notes)
 }
 
@@ -51,6 +52,10 @@ type Capturer struct {
 	tagger Tagger
 	cfg    config.CaptureConfig
 	client *http.Client
+}
+
+func (c *Capturer) allowsScripts(opts Options) bool {
+	return opts.AllowScripts || c.cfg.AllowScripts
 }
 
 func New(v *vault.Vault, tagger Tagger, cfg config.CaptureConfig) *Capturer {

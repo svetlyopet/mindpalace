@@ -251,6 +251,7 @@
   const urlInput = document.getElementById('url-input');
   const urlTitle = document.getElementById('url-title');
   const urlFull = document.getElementById('url-full');
+  const urlAllowScripts = document.getElementById('url-allow-scripts');
   const urlTags = document.getElementById('url-tags');
   const urlThoughts = document.getElementById('url-thoughts');
   const urlSuggestions = document.getElementById('url-tag-suggestions');
@@ -291,6 +292,7 @@
     if (!link) return;
     let title = urlTitle.value.trim();
     const full = urlFull.checked;
+    const allowScripts = urlAllowScripts.checked;
 
     function runSave() {
       title = urlTitle.value.trim();
@@ -312,7 +314,7 @@
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kind: 'url', url: link, full: full, title: title, thoughts: urlThoughts.value.trim() })
+            body: JSON.stringify({ kind: 'url', url: link, full: full, allow_scripts: allowScripts, title: title, thoughts: urlThoughts.value.trim() })
           });
         },
         capture: function (tagList) {
@@ -320,7 +322,7 @@
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kind: 'url', url: link, full: full, title: title, tags: tagList, thoughts: urlThoughts.value.trim() })
+            body: JSON.stringify({ kind: 'url', url: link, full: full, allow_scripts: allowScripts, title: title, tags: tagList, thoughts: urlThoughts.value.trim() })
           }).then(function (r) {
             return parseCaptureResponse(r, urlStatus, 'Saved.');
           });
@@ -329,6 +331,7 @@
           urlInput.value = '';
           urlTitle.value = '';
           urlFull.checked = false;
+          urlAllowScripts.checked = false;
           urlTags.value = '';
           urlThoughts.value = '';
           resetUrlTagPrompt();
@@ -368,6 +371,7 @@
   const socialTitle = document.getElementById('social-title');
   const socialTags = document.getElementById('social-tags');
   const socialThoughts = document.getElementById('social-thoughts');
+  const socialAllowScripts = document.getElementById('social-allow-scripts');
   const socialSuggestions = document.getElementById('social-tag-suggestions');
   const socialStatus = document.getElementById('social-status');
 
@@ -426,7 +430,7 @@
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kind: 'social', url: link, title: title, thoughts: socialThoughts.value.trim() })
+            body: JSON.stringify({ kind: 'social', url: link, title: title, allow_scripts: socialAllowScripts.checked, thoughts: socialThoughts.value.trim() })
           });
         },
         capture: function (tagList) {
@@ -434,7 +438,7 @@
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kind: 'social', url: link, title: title, tags: tagList, thoughts: socialThoughts.value.trim() })
+            body: JSON.stringify({ kind: 'social', url: link, title: title, tags: tagList, allow_scripts: socialAllowScripts.checked, thoughts: socialThoughts.value.trim() })
           }).then(function (r) {
             return parseCaptureResponse(r, socialStatus, 'Saved.');
           });
@@ -444,6 +448,7 @@
           socialTitle.value = '';
           socialTags.value = '';
           socialThoughts.value = '';
+          socialAllowScripts.checked = false;
           resetSocialTagPrompt();
           onCaptureSuccess(entryId, closeSocialModal);
         }

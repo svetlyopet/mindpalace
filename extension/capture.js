@@ -16,9 +16,15 @@ function appendTag(input, tag) {
   input.value = parts.concat(tag).join(", ");
 }
 
-async function loadDefaultFullHtml() {
-  const { defaultFullHtml } = await chrome.storage.sync.get("defaultFullHtml");
-  return !!defaultFullHtml;
+async function loadCaptureDefaults() {
+  const { defaultFullHtml, defaultAllowScripts } = await chrome.storage.sync.get([
+    "defaultFullHtml",
+    "defaultAllowScripts",
+  ]);
+  return {
+    defaultFullHtml: !!defaultFullHtml,
+    defaultAllowScripts: !!defaultAllowScripts,
+  };
 }
 
 async function loadDraft() {
@@ -34,8 +40,10 @@ async function loadDraft() {
   if (fullLabel) {
     fullLabel.hidden = mode === "social";
   }
+  const defaults = await loadCaptureDefaults();
+  document.getElementById("capture-scripts").checked = defaults.defaultAllowScripts;
   if (mode === "page") {
-    document.getElementById("capture-full").checked = await loadDefaultFullHtml();
+    document.getElementById("capture-full").checked = defaults.defaultFullHtml;
   }
   const titleEl = document.getElementById("capture-title");
   titleEl.value = captureDraft.title || captureDraft.url || "";
@@ -71,6 +79,7 @@ async function saveDraft(draft) {
   const thoughts = document.getElementById("capture-thoughts").value.trim();
   const mode = draft.mode || "page";
   const full = mode === "social" ? false : document.getElementById("capture-full").checked;
+  const allowScripts = document.getElementById("capture-scripts").checked;
   status.textContent =
     mode === "social"
       ? "Saving social post…"
@@ -86,6 +95,7 @@ async function saveDraft(draft) {
       title,
       tags,
       thoughts,
+      allow_scripts: allowScripts,
     };
   } else {
     body = {
@@ -96,6 +106,7 @@ async function saveDraft(draft) {
       tags,
       thoughts,
       full,
+      allow_scripts: allowScripts,
     };
   }
   let res;

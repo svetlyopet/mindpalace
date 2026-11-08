@@ -47,28 +47,48 @@
     </div>
     {{if .TabPageHidden}}
     <div class="tab-panel viewer-frame-wrap" data-panel="page" hidden>
-      <iframe class="viewer-frame preview" sandbox="" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
+      <iframe class="viewer-frame preview" sandbox="{{.FrameSandbox}}" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
     </div>
     {{else}}
     <div class="tab-panel viewer-frame-wrap" data-panel="page">
-      <iframe class="viewer-frame preview" sandbox="" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
+      <iframe class="viewer-frame preview" sandbox="{{.FrameSandbox}}" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
     </div>
     {{end}}
     {{if .TabNoteHidden}}
     <div class="tab-panel" data-panel="note" hidden>
+      {{if .HasEmbedHTML}}
+      <div class="viewer-frame-wrap">
+        <iframe class="viewer-frame preview" sandbox="{{.FrameSandbox}}" referrerpolicy="no-referrer" title="Embedded post" src="/ui/entry/{{.Entry.ID}}/file/embed.html"></iframe>
+      </div>
+      {{end}}
       <div class="entry-body prose">{{.BodyHTML}}</div>
     </div>
     {{else}}
     <div class="tab-panel" data-panel="note">
+      {{if .HasEmbedHTML}}
+      <div class="viewer-frame-wrap">
+        <iframe class="viewer-frame preview" sandbox="{{.FrameSandbox}}" referrerpolicy="no-referrer" title="Embedded post" src="/ui/entry/{{.Entry.ID}}/file/embed.html"></iframe>
+      </div>
+      {{end}}
       <div class="entry-body prose">{{.BodyHTML}}</div>
     </div>
     {{end}}
   </div>
   {{else if .HasSourceHTML}}
+  {{if .HasEmbedHTML}}
   <div class="viewer-frame-wrap">
-    <iframe class="viewer-frame preview" sandbox="" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
+    <iframe class="viewer-frame preview" sandbox="{{.FrameSandbox}}" referrerpolicy="no-referrer" title="Embedded post" src="/ui/entry/{{.Entry.ID}}/file/embed.html"></iframe>
+  </div>
+  {{end}}
+  <div class="viewer-frame-wrap">
+    <iframe class="viewer-frame preview" sandbox="{{.FrameSandbox}}" referrerpolicy="no-referrer" title="Saved page" src="/ui/entry/{{.Entry.ID}}/file/source.html"></iframe>
   </div>
   {{else if .ShowNoteTab}}
+  {{if .HasEmbedHTML}}
+  <div class="viewer-frame-wrap">
+    <iframe class="viewer-frame preview" sandbox="{{.FrameSandbox}}" referrerpolicy="no-referrer" title="Embedded post" src="/ui/entry/{{.Entry.ID}}/file/embed.html"></iframe>
+  </div>
+  {{end}}
   <div class="entry-body prose">{{.BodyHTML}}</div>
   {{end}}
 </article>

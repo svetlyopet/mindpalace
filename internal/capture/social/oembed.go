@@ -25,11 +25,13 @@ type oEmbedResponse struct {
 }
 
 // Fetch retrieves and parses a public post via the platform oEmbed API.
-func Fetch(ctx context.Context, client *http.Client, platform Platform, canonicalURL string) (*Post, error) {
+// includeScript keeps the provider widget script in EmbedHTML; otherwise the
+// request asks the provider to omit it.
+func Fetch(ctx context.Context, client *http.Client, platform Platform, canonicalURL string, includeScript bool) (*Post, error) {
 	if client == nil {
 		client = http.DefaultClient
 	}
-	endpoint, err := oEmbedEndpoint(platform, canonicalURL)
+	endpoint, err := oEmbedEndpoint(platform, canonicalURL, includeScript)
 	if err != nil {
 		return nil, err
 	}
@@ -57,22 +59,33 @@ func Fetch(ctx context.Context, client *http.Client, platform Platform, canonica
 		Images:       parsed.Images,
 		Videos:       parsed.Videos,
 	}
+	if includeScript {
+		post.EmbedHTML = resp.HTML
+	}
 	if post.Text == "" && len(post.Images) == 0 && len(post.Videos) == 0 {
 		return nil, fmt.Errorf("social oembed: no post content extracted")
 	}
 	return post, nil
 }
 
-func oEmbedEndpoint(platform Platform, canonicalURL string) (string, error) {
+func oEmbedEndpoint(platform Platform, canonicalURL string, includeScript bool) (string, error) {
+	q := url.Values{}
+	q.Set("url", canonicalURL)
 	switch platform {
 	case PlatformX:
-		return xOEmbedBase + "?omit_script=true&url=" + url.QueryEscape(canonicalURL), nil
+		if !includeScript {
+			q.Set("omit_script", "true")
+		}
+		return xOEmbedBase + "?" + q.Encode(), nil
 	case PlatformFacebook:
 		base := fbGraphOEmbedPost
 		if isFacebookVideoURL(canonicalURL) {
 			base = fbGraphOEmbedVideo
 		}
-		return base + "?omitscript=true&url=" + url.QueryEscape(canonicalURL), nil
+		if !includeScript {
+			q.Set("omitscript", "true")
+		}
+		return base + "?" + q.Encode(), nil
 	default:
 		return "", fmt.Errorf("unsupported platform %q", platform)
 	}

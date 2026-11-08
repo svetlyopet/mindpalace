@@ -33,13 +33,13 @@ type assetRef struct {
 
 // bundlePage saves source.html and same-origin assets/ for iteration-2 file serving
 // (GET .../files/source.html, .../files/assets/*).
-func bundlePage(ctx context.Context, client *http.Client, pageURL *url.URL, rawHTML []byte, entryID, entryDir string) []string {
+func bundlePage(ctx context.Context, client *http.Client, pageURL *url.URL, rawHTML []byte, entryID, entryDir string, allowScripts bool) []string {
 	var warnings []string
 	if client == nil {
 		client = http.DefaultClient
 	}
 
-	safeHTML, sanitizeWarns := SanitizeBundleHTML(rawHTML)
+	safeHTML, sanitizeWarns := SanitizeBundleHTML(rawHTML, allowScripts)
 	warnings = append(warnings, sanitizeWarns...)
 	if len(safeHTML) == 0 {
 		warnings = append(warnings, "html bundle: using minimal safe document after sanitize failure")
@@ -96,7 +96,7 @@ func bundlePage(ctx context.Context, client *http.Client, pageURL *url.URL, rawH
 				warnings = append(warnings, fmt.Sprintf("html bundle: fetch %s: %v", absKey, err))
 				continue
 			}
-			if isRejectedScriptAsset(ct, ext, data) {
+			if !allowScripts && isRejectedScriptAsset(ct, ext, data) {
 				if r.allowCrossOrigin {
 					removeNode(r.node)
 				}
@@ -153,6 +153,10 @@ func collectAssetRefs(n *html.Node, refs *[]assetRef) {
 	if n.Type == html.ElementNode {
 		switch n.Data {
 		case "img", "source":
+			if v := attrVal(n, "src"); v != "" {
+				*refs = append(*refs, assetRef{node: n, attr: "src", raw: v})
+			}
+		case "script":
 			if v := attrVal(n, "src"); v != "" {
 				*refs = append(*refs, assetRef{node: n, attr: "src", raw: v})
 			}
@@ -263,6 +267,9 @@ func extFromContentType(ct string) string {
 	switch ct {
 	case "text/css":
 		return ".css"
+	case "application/javascript", "text/javascript", "application/ecmascript",
+		"text/ecmascript", "application/x-javascript":
+		return ".js"
 	case "image/png":
 		return ".png"
 	case "image/jpeg":

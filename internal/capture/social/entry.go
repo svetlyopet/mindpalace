@@ -20,6 +20,7 @@ const (
 	maxAssetBytes = 5 << 20
 	maxAssetCount = 50
 	assetsDirName = "assets"
+	embedHTMLName = "embed.html"
 )
 
 // BuildOptions configures social entry construction.
@@ -411,6 +412,9 @@ func FinalizeSocialEntry(ctx context.Context, client *http.Client, e *vault.Entr
 	body, mediaWarns := SaveMedia(ctx, client, e.ID, e.Dir, post)
 	warnings = append(warnings, mediaWarns...)
 	e.Body = body
+	if err := writeEmbedDocument(e.Dir, post.EmbedHTML); err != nil {
+		warnings = append(warnings, "social embed: "+err.Error())
+	}
 	if avatarPath, avatarWarns := SaveAuthorAvatar(ctx, client, e.Dir, post.Author.AvatarURL); avatarPath != "" {
 		warnings = append(warnings, avatarWarns...)
 		SetAuthorAvatar(e, avatarPath)
@@ -419,6 +423,22 @@ func FinalizeSocialEntry(ctx context.Context, client *http.Client, e *vault.Entr
 		warnings = append(warnings, avatarWarns...)
 	}
 	return warnings
+}
+
+func writeEmbedDocument(entryDir, snippet string) error {
+	snippet = strings.TrimSpace(snippet)
+	if snippet == "" {
+		return nil
+	}
+	var b strings.Builder
+	b.WriteString("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Embed</title></head><body>\n")
+	b.WriteString(snippet)
+	b.WriteString("\n</body></html>\n")
+	path := filepath.Join(entryDir, embedHTMLName)
+	if err := os.WriteFile(path, []byte(b.String()), fsperm.PrivateFileMode); err != nil {
+		return fmt.Errorf("write embed.html: %w", err)
+	}
+	return nil
 }
 
 func authorAssetFilename(rawURL, ext string) string {

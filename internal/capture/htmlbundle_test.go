@@ -51,7 +51,7 @@ func TestBundlePage(t *testing.T) {
 
 	dir := t.TempDir()
 	entryID := "testentry01"
-	warns := bundlePage(context.Background(), srv.Client(), u, []byte(pageHTML), entryID, dir)
+	warns := bundlePage(context.Background(), srv.Client(), u, []byte(pageHTML), entryID, dir, false)
 	crossOrigin := 0
 	scriptRemoved := false
 	for _, w := range warns {
@@ -119,7 +119,7 @@ func TestBundlePage_cdnStylesheet(t *testing.T) {
 	}
 	dir := t.TempDir()
 	entryID := "cdntest01"
-	warns := bundlePage(context.Background(), http.DefaultClient, u, []byte(strings.Replace(pageHTML, "https://cdn.example.test", cdn.URL, 1)), entryID, dir)
+	warns := bundlePage(context.Background(), http.DefaultClient, u, []byte(strings.Replace(pageHTML, "https://cdn.example.test", cdn.URL, 1)), entryID, dir, false)
 	for _, w := range warns {
 		if strings.Contains(w, "cross-origin") {
 			t.Fatalf("CDN stylesheet should be bundled, not skipped: %v", warns)
@@ -151,7 +151,7 @@ func TestBundlePage_svgSanitized(t *testing.T) {
 	defer srv.Close()
 	u, _ := url.Parse(srv.URL + "/")
 	dir := t.TempDir()
-	_ = bundlePage(context.Background(), srv.Client(), u, []byte(pageHTML), "svgtest01", dir)
+	_ = bundlePage(context.Background(), srv.Client(), u, []byte(pageHTML), "svgtest01", dir, false)
 	assets, _ := os.ReadDir(filepath.Join(dir, "assets"))
 	if len(assets) != 1 {
 		t.Fatalf("expected 1 asset, got %d", len(assets))
@@ -159,5 +159,64 @@ func TestBundlePage_svgSanitized(t *testing.T) {
 	data, _ := os.ReadFile(filepath.Join(dir, "assets", assets[0].Name()))
 	if strings.Contains(strings.ToLower(string(data)), "<script") {
 		t.Fatalf("script in stored svg: %s", data)
+	}
+}
+
+func TestBundlePage_allowScripts(t *testing.T) {
+	const pageHTML = `<!DOCTYPE html><html><head>
+<script>alert(1)</script>
+<script src="/app.js"></script>
+<script src="https://abs.twimg.com/widgets.js"></script>
+</head><body><p>hi</p></body></html>`
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/app.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		_, _ = w.Write([]byte("alert(1)"))
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	u, err := url.Parse(srv.URL + "/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	entryID := "scriptentry"
+	warns := bundlePage(context.Background(), srv.Client(), u, []byte(pageHTML), entryID, dir, true)
+	for _, w := range warns {
+		if strings.Contains(w, "removed script") || strings.Contains(w, "rejected script") {
+			t.Fatalf("unexpected warning %q in %v", w, warns)
+		}
+	}
+	src, err := os.ReadFile(filepath.Join(dir, "source.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(src)
+	if !strings.Contains(strings.ToLower(s), "<script") {
+		t.Fatalf("script removed: %s", s)
+	}
+	if !strings.Contains(s, "https://abs.twimg.com/widgets.js") {
+		t.Fatalf("cross-origin script rewritten: %s", s)
+	}
+	prefix := "/ui/entry/" + entryID + "/file/assets/"
+	if !strings.Contains(s, prefix) {
+		t.Fatalf("same-origin script not archived: %s", s)
+	}
+	var jsBody []byte
+	assets, err := os.ReadDir(filepath.Join(dir, "assets"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range assets {
+		if strings.HasSuffix(e.Name(), ".js") {
+			jsBody, err = os.ReadFile(filepath.Join(dir, "assets", e.Name()))
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	if string(jsBody) != "alert(1)" {
+		t.Fatalf("js asset = %q", jsBody)
 	}
 }

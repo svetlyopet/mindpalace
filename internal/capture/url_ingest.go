@@ -100,6 +100,9 @@ func (c *Capturer) ingestHTML(ctx context.Context, link string, pageURL *url.URL
 	if err != nil {
 		return nil, err
 	}
+	if c.allowsScripts(opts) {
+		e.MarkAllowScripts()
+	}
 	res, err := c.applyTags(ctx, e, plain, opts)
 	if err != nil {
 		return nil, err
@@ -118,7 +121,7 @@ func (c *Capturer) ingestHTML(ctx context.Context, link string, pageURL *url.URL
 		return nil, err
 	}
 	if opts.FullHTML || c.cfg.FullHTML {
-		res.Warnings = append(res.Warnings, bundlePage(ctx, c.client, pageURL, rawHTML, res.Entry.ID, res.Entry.Dir)...)
+		res.Warnings = append(res.Warnings, bundlePage(ctx, c.client, pageURL, rawHTML, res.Entry.ID, res.Entry.Dir, c.allowsScripts(opts))...)
 	}
 	return res, nil
 }

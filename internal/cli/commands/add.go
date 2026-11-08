@@ -19,12 +19,13 @@ import (
 )
 
 var (
-	addTags     []string
-	addTitle    string
-	addType     string
-	addFull     bool
-	addMessage  string
-	addThoughts string
+	addTags         []string
+	addTitle        string
+	addType         string
+	addFull         bool
+	addAllowScripts bool
+	addMessage      string
+	addThoughts     string
 )
 
 func NewAdd(rt *clictx.Runtime) *cobra.Command {
@@ -39,6 +40,7 @@ func ConfigureAddFlags(add, addNote, addURL *cobra.Command) {
 	add.PersistentFlags().StringVar(&addTitle, "title", "", "entry title (required for url, file, and note with -m or stdin)")
 	add.PersistentFlags().StringVar(&addThoughts, "thoughts", "", "optional commentary appended as a Thoughts section (not used for notes)")
 	add.PersistentFlags().StringVar(&addType, "type", "", "entry type")
+	add.PersistentFlags().BoolVar(&addAllowScripts, "allow-scripts", false, "keep JavaScript in social embeds and full HTML bundles")
 	addURL.Flags().BoolVar(&addFull, "full", false, "save full HTML bundle")
 	addNote.Flags().StringVarP(&addMessage, "message", "m", "", "note text")
 }
@@ -127,13 +129,14 @@ func NewAddURL(rt *clictx.Runtime) *cobra.Command {
 			opts.FullHTML = addFull
 			if rt.Remote() {
 				return finishRemoteCapture(rt, apiclient.CaptureReq{
-					Kind:     "url",
-					URL:      args[0],
-					Title:    opts.Title,
-					Tags:     tagsPtr(opts),
-					Type:     string(opts.Type),
-					Full:     opts.FullHTML,
-					Thoughts: opts.Thoughts,
+					Kind:         "url",
+					URL:          args[0],
+					Title:        opts.Title,
+					Tags:         tagsPtr(opts),
+					Type:         string(opts.Type),
+					Full:         opts.FullHTML,
+					AllowScripts: opts.AllowScripts,
+					Thoughts:     opts.Thoughts,
 				})
 			}
 			res, err := rt.Capturer.URL(context.Background(), args[0], opts)
@@ -161,12 +164,13 @@ func NewAddSocial(rt *clictx.Runtime) *cobra.Command {
 			applyRequiredCaptureFlags(&opts)
 			if rt.Remote() {
 				return finishRemoteCapture(rt, apiclient.CaptureReq{
-					Kind:     "social",
-					URL:      args[0],
-					Title:    opts.Title,
-					Tags:     tagsPtr(opts),
-					Type:     string(opts.Type),
-					Thoughts: opts.Thoughts,
+					Kind:         "social",
+					URL:          args[0],
+					Title:        opts.Title,
+					Tags:         tagsPtr(opts),
+					Type:         string(opts.Type),
+					AllowScripts: opts.AllowScripts,
+					Thoughts:     opts.Thoughts,
 				})
 			}
 			res, err := rt.Capturer.Social(context.Background(), args[0], opts)
@@ -256,9 +260,9 @@ func addOptions(cmd *cobra.Command) (capture.Options, error) {
 		if !t.Valid() {
 			return opts, fmt.Errorf("invalid type %q", addType)
 		}
-		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, t, addFull, addThoughts)
+		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, t, addFull, addThoughts, addAllowScripts)
 	} else {
-		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, "", addFull, addThoughts)
+		opts = library.CaptureOptionsFromFields(addTitle, addTags, opts.TagsExplicit, "", addFull, addThoughts, addAllowScripts)
 	}
 	if !opts.TagsExplicit && input.IsInteractive() {
 		opts.Prompter = input.TerminalTagPrompter{}
