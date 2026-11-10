@@ -6,14 +6,14 @@ require (
 	codeberg.org/readeck/go-readability/v2 v2.1.3
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
 	github.com/adrg/frontmatter v0.2.0
-	github.com/blevesearch/bleve/v2 v2.6.1
+	github.com/blevesearch/bleve/v2 v2.6.3
 	github.com/charmbracelet/glamour v1.0.0
 	github.com/creack/pty v1.1.24
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/golangci/golangci-lint/v2 v2.15.0
 	github.com/securego/gosec/v2 v2.30.0
 	github.com/spf13/cobra v1.10.2
-	github.com/yuin/goldmark v1.8.6
+	github.com/yuin/goldmark v1.8.7
 	golang.org/x/crypto v0.58.0
 	golang.org/x/net v0.62.0
 	golang.org/x/term v0.47.0
@@ -74,23 +74,23 @@ require (
 	github.com/bits-and-blooms/bitset v1.25.0 // indirect
 	github.com/bkielbasa/cyclop v1.2.3 // indirect
 	github.com/blevesearch/bleve_index_api v1.4.1 // indirect
-	github.com/blevesearch/geo v0.2.6 // indirect
+	github.com/blevesearch/geo v0.2.8 // indirect
 	github.com/blevesearch/go-faiss v1.1.5 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
 	github.com/blevesearch/mmap-go v1.2.0 // indirect
-	github.com/blevesearch/scorch_segment_api/v2 v2.4.10 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.4.11 // indirect
 	github.com/blevesearch/segment v0.9.1 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
 	github.com/blevesearch/upsidedown_store_api v1.0.2 // indirect
-	github.com/blevesearch/vellum v1.2.0 // indirect
+	github.com/blevesearch/vellum v1.2.1 // indirect
 	github.com/blevesearch/zapx/v11 v11.4.3 // indirect
 	github.com/blevesearch/zapx/v12 v12.4.3 // indirect
 	github.com/blevesearch/zapx/v13 v13.4.3 // indirect
 	github.com/blevesearch/zapx/v14 v14.4.3 // indirect
 	github.com/blevesearch/zapx/v15 v15.4.3 // indirect
 	github.com/blevesearch/zapx/v16 v16.3.4 // indirect
-	github.com/blevesearch/zapx/v17 v17.2.3 // indirect
+	github.com/blevesearch/zapx/v17 v17.2.5 // indirect
 	github.com/blizzy78/varnamelen v0.8.0 // indirect
 	github.com/bombsimon/wsl/v4 v4.7.0 // indirect
 	github.com/bombsimon/wsl/v5 v5.9.0 // indirect
